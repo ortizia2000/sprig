@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-21T12:46+00:00",
+  "updated": "2026-06-21T14:25+00:00",
   "posts": [
     {
       "id": "post1",
@@ -11,10 +11,10 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-en.png",
+      "thumb": "/post1-en.png",
       "media": [
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-en.png",
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-launch.png"
+        "/post1-en.png",
+        "/post1-launch.png"
       ],
       "caption_en": "Your AI doesn't know you. It has known you for 5 minutes. Every chat starts from zero. Mycelium is the memory layer that lives between your brain and any model. It remembers what matters and stays yours, even when you switch AI tomorrow. This is just the beginning. Stay.",
       "caption_es": "Tu IA no te conoce. Te conoce hace 5 minutos. Cada chat empieza de cero. Mycelium es la capa de memoria que vive entre tu cerebro y cualquier modelo. Recuerda lo que importa y sigue siendo tuyo, aunque cambies de IA mañana. Esto apenas empieza. Quédate.",
@@ -32,9 +32,9 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post2-reel.mp4",
+      "thumb": "/post2-reel.mp4",
       "media": [
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post2-reel.mp4"
+        "/post2-reel.mp4"
       ],
       "caption_en": "The question nobody asks before pasting a document into ChatGPT: where does that data go. With Mycelium your memory runs wherever you decide. NDA, SOC 2, BAA compliant, and still real AI. It is not more private AI. It is AI that is yours.",
       "caption_es": "La pregunta que nadie hace antes de pegar un documento en ChatGPT: ¿a dónde van esos datos. Con Mycelium tu memoria corre donde tú decidas. Tu máquina, tu nube privada. No es IA más privada. Es IA que de verdad es tuya.",
@@ -52,10 +52,10 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-en.png",
+      "thumb": "/post3-en.png",
       "media": [
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-en.png",
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-5cosas.png"
+        "/post3-en.png",
+        "/post3-5cosas.png"
       ],
       "caption_en": "ChatGPT is brilliant inside a chat window, but it forgets everything when you close it and it is not yours. Your second brain is. Three are on the image. The other two: it uses Claude, ChatGPT and Gemini with the same context of you, and it shows patterns in your behavior across months, not one session. The full 30 and how to start: myceliumai.co",
       "caption_es": "ChatGPT es brillante dentro de una ventana de chat, pero olvida todo al cerrarla y no es tuyo. Tu segundo cerebro sí. Tres están en la imagen. Las otras dos: usa Claude, ChatGPT y Gemini con el mismo contexto tuyo, y te muestra patrones de tu comportamiento a lo largo de meses, no de una sesión. Las 30 completas y cómo empezar: myceliumai.co",
@@ -73,10 +73,10 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-en.png",
+      "thumb": "/post4-en.png",
       "media": [
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-en.png",
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-buildinpublic.png"
+        "/post4-en.png",
+        "/post4-buildinpublic.png"
       ],
       "caption_en": "Two founders, two complementary angles. One a serial entrepreneur, the other an enterprise technology leader. We are fixing the same problem from both ends: context. The thing every individual, team, and corporation is missing when they work with AI. We are building it in public. What context does your AI keep forgetting?",
       "caption_es": "Dos fundadores, dos ángulos complementarios. Emprendimiento serial y liderazgo en tecnología empresarial. Atacamos el mismo problema desde dos lados: el contexto. Eso que le falta a cada individuo, equipo y corporación cuando trabaja con IA. Lo construimos en público. ¿Qué contexto se le olvida a tu IA?",
@@ -94,10 +94,10 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-en.png",
+      "thumb": "/post5-en.png",
       "media": [
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-en.png",
-        "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-equipo.png"
+        "/post5-en.png",
+        "/post5-equipo.png"
       ],
       "caption_en": "Underground there is one living network: your memory. From it grow the mushrooms, the agents that do the work. They all drink from the same brain. We will introduce them this week. Which one would you start with.",
       "caption_es": "Bajo tierra hay una sola red viva: tu memoria. De ahí crecen los hongos, que son los agentes que hacen el trabajo. Todos beben del mismo cerebro. Esta semana te los vamos presentando. ¿Con cuál empezarías.",
