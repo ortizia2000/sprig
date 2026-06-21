@@ -7,9 +7,8 @@ import os
 import yaml
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
-MEDIA_BASE = os.environ.get(
-    "MEDIA_BASE_URL", "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media"
-)
+MEDIA_BASE = os.environ.get("MEDIA_BASE_URL") or \
+    "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media"
 
 
 def _read_json(path, default):
