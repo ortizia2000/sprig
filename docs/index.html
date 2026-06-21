@@ -20,10 +20,11 @@
   a.btn:hover,button.f:hover{border-color:var(--accent);color:var(--accent)}
   .spacer{flex:1}
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
-  .seg button{border:0;border-radius:0;padding:7px 12px;background:#fff} .seg button.on{background:var(--accent);color:#fff}
+  .seg button{font:inherit;border:0;border-radius:0;padding:7px 12px;background:#fff;cursor:pointer;font-size:13px} .seg button.on{background:var(--accent);color:#fff}
   .stats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 16px;min-width:96px}
   .stat .n{font-size:21px;font-weight:600;line-height:1.1} .stat .l{font-size:11.5px;color:var(--mut)}
+  /* table */
   .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:auto}
   table{border-collapse:collapse;width:100%;min-width:880px}
   th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
@@ -39,6 +40,21 @@
   .pill.sched{background:#fff;color:var(--mut);border-color:var(--line)}
   .type{font-size:12px;color:#2f6fb0;background:#eef3fb;padding:2px 9px;border-radius:20px}
   .fbnote{font-size:11px;color:var(--mut);margin-top:3px}
+  /* calendar */
+  .calbar{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px}
+  .caltitle{font-size:17px;font-weight:600;min-width:170px;text-align:center}
+  .calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
+  .calhead div{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;text-align:center}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .day{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:96px;padding:6px}
+  .day.empty{background:transparent;border:0}
+  .dnum{font-size:12px;color:var(--mut);text-align:right;margin-bottom:4px}
+  .day.today{border-color:var(--accent)} .day.today .dnum{color:var(--accent);font-weight:600}
+  .chip{display:flex;align-items:center;gap:5px;border-left:3px solid var(--line);background:#fbfcfa;border-radius:5px;padding:3px 5px;margin-bottom:4px}
+  .chip.live{border-left-color:var(--green)} .chip.sched{border-left-color:#cfd4cc}
+  .chip img{width:18px;height:22px;object-fit:cover;border-radius:3px;background:#e9ebe6;flex:none}
+  .chip span{font-size:11px;font-weight:600;text-transform:capitalize}
+  .chip em{font-size:10px;color:var(--mut);font-style:normal;margin-left:auto}
   footer{margin-top:18px;font-size:12px;color:var(--mut)}
 </style>
 </head>
@@ -52,108 +68,102 @@
   <div class="bar">
     <a class="btn primary" href="https://github.com/ortizia2000/sprig/edit/main/content/posts.yaml" target="_blank">Edit the queue ↗</a>
     <a class="btn" href="https://github.com/ortizia2000/sprig/actions/workflows/publish.yml" target="_blank">Runs ↗</a>
-    <a class="btn" href="https://github.com/ortizia2000/sprig" target="_blank">Repo ↗</a>
+    <div class="seg" id="viewF"><button data-v="table" class="on">Table</button><button data-v="calendar">Calendar</button></div>
     <span class="spacer"></span>
-    <div class="seg" id="statusF">
-      <button data-v="all" class="on">All</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button>
-    </div>
-    <div class="seg" id="chanF">
-      <button data-v="all" class="on">All channels</button><button data-v="instagram">IG</button><button data-v="facebook">FB</button><button data-v="linkedin">LinkedIn</button>
-    </div>
+    <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button></div>
+    <div class="seg" id="chanF"><button data-v="all" class="on">All channels</button><button data-v="instagram">IG</button><button data-v="facebook">FB</button><button data-v="linkedin">LinkedIn</button></div>
   </div>
 
   <div class="stats" id="stats"></div>
-
-  <div class="tablewrap">
-    <table>
-      <thead><tr id="head"></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
+  <div id="view"></div>
   <footer id="foot"></footer>
 </div>
 
 <script>
 const PLAT={instagram:"IG",facebook:"FB",linkedin:"LI"};
-const COLS=[
-  {k:"thumb",t:"",sort:0},{k:"post",t:"Post",sort:0},{k:"when",t:"When",sort:1},
-  {k:"channels",t:"Channels",sort:0},{k:"type",t:"Type",sort:0},
-  {k:"reach",t:"Reach",sort:1,num:1},{k:"likes",t:"Likes",sort:1,num:1},
-  {k:"comments",t:"Comments",sort:1,num:1},{k:"saved",t:"Saves",sort:1,num:1},
-];
-let DATA=[], sortK="when", sortDir=1, fStatus="all", fChan="all";
-function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
-function ig(p,k){return ((p.metrics||{}).instagram||{})[k];}
-function isPub(p){return (p.published||[]).length>0;}
-function whenLabel(p){return p.date+" · "+p.time+" EST";}
-function tsOf(p){return Date.parse(p.date+"T"+(p.time||"00:00")+":00");}
-
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONLONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const COLS=[{k:"thumb",t:""},{k:"post",t:"Post"},{k:"when",t:"When",sort:1},{k:"channels",t:"Channels"},
+  {k:"type",t:"Type"},{k:"reach",t:"Reach",sort:1,num:1},{k:"likes",t:"Likes",sort:1,num:1},
+  {k:"comments",t:"Comments",sort:1,num:1},{k:"saved",t:"Saves",sort:1,num:1}];
+let DATA=[], sortK="when", sortDir=1, fStatus="all", fChan="all", view="table", calMonth=null;
+const esc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const ig=(p,k)=>((p.metrics||{}).instagram||{})[k];
+const isPub=p=>(p.published||[]).length>0;
+const tsOf=p=>Date.parse(p.date+"T"+(p.time||"00:00")+":00");
+function fmtWhen(date,time){
+  const [Y,M,D]=date.split("-"); let [h,mi]=(time||"00:00").split(":").map(Number);
+  const ap=h>=12?"pm":"am", h12=(h%12)||12;
+  return `${MON[(+M)-1]}-${D}-${Y} · ${h12}:${String(mi).padStart(2,"0")} ${ap} EST`;
+}
 function filtered(){
   return DATA.filter(p=>{
-    if(fStatus==="published" && !isPub(p)) return false;
-    if(fStatus==="scheduled" && isPub(p)) return false;
-    if(fChan!=="all" && !(p.platforms||[]).includes(fChan)) return false;
+    if(fStatus==="published"&&!isPub(p))return false;
+    if(fStatus==="scheduled"&&isPub(p))return false;
+    if(fChan!=="all"&&!(p.platforms||[]).includes(fChan))return false;
     return true;
-  }).sort((a,b)=>{
-    let va,vb;
-    if(sortK==="when"){va=tsOf(a);vb=tsOf(b);}
-    else {va=ig(a,sortK)??-1; vb=ig(b,sortK)??-1;}
+  });
+}
+function sorted(rows){
+  return rows.slice().sort((a,b)=>{
+    let va,vb; if(sortK==="when"){va=tsOf(a);vb=tsOf(b);} else {va=ig(a,sortK)??-1;vb=ig(b,sortK)??-1;}
     return (va-vb)*sortDir;
   });
 }
-function head(){
-  document.getElementById("head").innerHTML=COLS.map(c=>{
-    const ar = c.k===sortK? `<span class="ar">${sortDir>0?"▲":"▼"}</span>`:"";
-    return `<th class="${c.sort?'sortable':''} ${c.num?'num':''}" data-k="${c.k}">${c.t} ${ar}</th>`;
-  }).join("");
-  document.querySelectorAll("th.sortable").forEach(th=>th.onclick=()=>{
-    const k=th.dataset.k; if(k===sortK) sortDir*=-1; else {sortK=k; sortDir=1;}
-    render();
-  });
+/* ---- table ---- */
+function renderTable(){
+  const head=COLS.map(c=>{const ar=c.k===sortK?`<span class="ar">${sortDir>0?"▲":"▼"}</span>`:"";
+    return `<th class="${c.sort?'sortable':''} ${c.num?'num':''}" data-k="${c.k}">${c.t} ${ar}</th>`;}).join("");
+  const rows=sorted(filtered()).map(p=>{
+    const chans=(p.platforms||[]).map(pl=>{const l=(p.published||[]).includes(pl);
+      return `<span class="pill ${l?'live':'sched'}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
+    const fb=((p.metrics||{}).facebook)||{};
+    const fbn=(fb.reactions!=null||fb.comments!=null)?`<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
+    const num=k=>{const v=ig(p,k);return v==null?`<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
+    return `<tr><td><img class="thumb" src="${esc(p.thumb||'')}" alt=""></td>
+      <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(p.caption_en||'')}</div></td>
+      <td>${fmtWhen(p.date,p.time)}</td><td>${chans}${fbn}</td><td><span class="type">${esc(p.type)}</span></td>
+      ${num("reach")}${num("likes")}${num("comments")}${num("saved")}</tr>`;
+  }).join("") || `<tr><td colspan="9" style="color:var(--mut);padding:20px">No posts match this filter.</td></tr>`;
+  document.getElementById("view").innerHTML=`<div class="tablewrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  document.querySelectorAll("th.sortable").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k===sortK)sortDir*=-1;else{sortK=k;sortDir=1;}render();});
 }
-function row(p){
-  const chans=(p.platforms||[]).map(pl=>{
-    const live=(p.published||[]).includes(pl);
-    return `<span class="pill ${live?'live':'sched'}">${PLAT[pl]||pl}${live?' ●':''}</span>`;
-  }).join("");
-  const fb=((p.metrics||{}).facebook)||{};
-  const fbn=(fb.reactions!=null||fb.comments!=null)? `<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
-  const num=k=>{const v=ig(p,k); return v==null? `<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
-  return `<tr>
-    <td><img class="thumb" src="${esc(p.thumb||'')}" alt=""></td>
-    <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(p.caption_en||'')}</div></td>
-    <td>${whenLabel(p)}</td>
-    <td>${chans}${fbn}</td>
-    <td><span class="type">${esc(p.type)}</span></td>
-    ${num("reach")}${num("likes")}${num("comments")}${num("saved")}
-  </tr>`;
-}
-function render(){
-  head();
-  const rows=filtered();
-  document.getElementById("rows").innerHTML = rows.length? rows.map(row).join("")
-    : `<tr><td colspan="9" style="color:var(--mut);padding:20px">No posts match this filter.</td></tr>`;
+/* ---- calendar ---- */
+function renderCalendar(){
+  const posts=filtered(), byDate={}; posts.forEach(p=>{(byDate[p.date]=byDate[p.date]||[]).push(p);});
+  const y=calMonth.getFullYear(), m=calMonth.getMonth();
+  const startDow=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+  const today=new Date(), todayS=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const chip=p=>{const l=isPub(p), d=(p.platforms||[]).map(x=>PLAT[x]).join(' ');
+    return `<div class="chip ${l?'live':'sched'}"><img src="${esc(p.thumb||'')}"><span>${esc(p.id)}</span><em>${d}</em></div>`;};
+  let cells=""; for(let i=0;i<startDow;i++)cells+=`<div class="day empty"></div>`;
+  for(let d=1;d<=days;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=`<div class="day ${ds===todayS?'today':''}"><div class="dnum">${d}</div>${(byDate[ds]||[]).map(chip).join("")}</div>`;}
+  document.getElementById("view").innerHTML=`
+    <div class="calbar"><button class="f" id="pm">‹</button><div class="caltitle">${MONLONG[m]} ${y}</div><button class="f" id="nm">›</button></div>
+    <div class="calhead">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div>${d}</div>`).join("")}</div>
+    <div class="cal">${cells}</div>`;
+  document.getElementById("pm").onclick=()=>{calMonth=new Date(y,m-1,1);render();};
+  document.getElementById("nm").onclick=()=>{calMonth=new Date(y,m+1,1);render();};
 }
 function stats(){
-  const pub=DATA.filter(isPub).length;
-  const reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
-  const cards=[["Posts",DATA.length],["Published",pub],["Scheduled",DATA.length-pub]];
-  if(reach>0) cards.push(["Total reach",reach.toLocaleString()]);
-  document.getElementById("stats").innerHTML=cards.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+  const pub=DATA.filter(isPub).length, reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
+  const c=[["Posts",DATA.length],["Published",pub],["Scheduled",DATA.length-pub]];
+  if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
+  document.getElementById("stats").innerHTML=c.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
-function wireSeg(id,set){
-  document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{
-    document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove("on"));
-    b.classList.add("on"); set(b.dataset.v); render();
-  });
-}
+function render(){ view==="calendar"?renderCalendar():renderTable(); }
+function wireSeg(id,fn){document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove("on"));b.classList.add("on");fn(b.dataset.v);render();});}
 fetch('./data.json?'+Date.now()).then(r=>r.json()).then(d=>{
   DATA=d.posts||[];
-  document.getElementById('updated').textContent=d.updated? 'updated '+d.updated.replace('T',' ')+' UTC':'';
+  const dates=DATA.map(p=>p.date).filter(Boolean).sort();
+  calMonth=dates.length?new Date(dates[0]+"T00:00:00"):new Date(); calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth(),1);
+  document.getElementById('updated').textContent=d.updated?'updated '+d.updated.replace('T',' ')+' UTC':'';
   document.getElementById('foot').textContent="Performance pulls daily from the Instagram & Facebook APIs. Edit a caption or time in the queue and it updates on the next run. Metrics fill in once a post is live.";
-  wireSeg("statusF",v=>fStatus=v); wireSeg("chanF",v=>fChan=v);
+  wireSeg("viewF",v=>view=v); wireSeg("statusF",v=>fStatus=v); wireSeg("chanF",v=>fChan=v);
   stats(); render();
-}).catch(()=>{ document.getElementById('rows').innerHTML='<tr><td colspan="9" style="padding:20px">Could not load data.json yet — it builds on the first Actions run.</td></tr>'; });
+}).catch(()=>{document.getElementById('view').innerHTML='<p style="padding:20px;color:var(--mut)">Could not load data.json yet — it builds on the first Actions run.</p>';});
 </script>
 </body>
 </html>
