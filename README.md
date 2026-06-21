@@ -61,6 +61,15 @@ Turn it on once: repo → **Settings → Pages → Source: Deploy from a branch 
 It will be served at **https://ortizia2000.github.io/sprig/**. "Edit the queue" on the page links
 straight to the GitHub editor for `posts.yaml`.
 
+## Rescheduling from the dashboard (drag-and-drop)
+
+The dashboard can change *when* a post goes live, no editing files by hand:
+1. Click **Enable editing** and paste a GitHub **fine-grained token** (Repository access: only this repo, Permissions → Contents → Read and write). It's stored only in your browser, never in the code.
+2. In **Calendar** view, **drag a post to another day**, or **double-click** it (or click the When cell in the table) to set the exact **time**.
+3. That writes `content/schedule.json` (per-post date/time overrides) via the GitHub API. The publisher and dashboard both respect it.
+
+Captions/media still live in `posts.yaml`; the schedule overrides only the date/time.
+
 ## Adding posts
 Drop the image(s)/video in `content/media/`, add an entry to `content/posts.yaml`, commit. Done.
 
