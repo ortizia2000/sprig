@@ -1,0 +1,35 @@
+name: publish
+
+on:
+  schedule:
+    - cron: "5 * * * *"     # every hour at :05 UTC; the script publishes only what is due
+  workflow_dispatch: {}      # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write            # so it can commit the published-state file back
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Publish due posts
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
+          MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+        run: python -m publisher.publish
+      - name: Save published state
+        run: |
+          git config user.name "sprig-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/state/published.json || true
+          git commit -m "state: mark published [skip ci]" || echo "no state change"
+          git push || echo "nothing to push"
