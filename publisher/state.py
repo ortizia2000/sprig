@@ -1,5 +1,6 @@
-"""Tracks which posts have already gone out, per platform, so reruns never double-post.
-The GitHub Action commits this file back to the repo after each run."""
+"""Tracks which posts went out, per platform, and the returned media id (so the
+metrics job can look up insights). Shape: {post_id: {platform: media_ref}}.
+The GitHub Action commits this file back so reruns never double-post."""
 import json
 import os
 
@@ -15,14 +16,16 @@ def _load():
 
 
 def is_published(post_id, platform):
-    return platform in _load().get(post_id, [])
+    return platform in _load().get(post_id, {})
 
 
-def mark(post_id, platform):
+def mark(post_id, platform, ref=None):
     data = _load()
-    data.setdefault(post_id, [])
-    if platform not in data[post_id]:
-        data[post_id].append(platform)
+    data.setdefault(post_id, {})[platform] = ref or True
     os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     with open(STATE_FILE, "w") as f:
         json.dump(data, f, indent=2, sort_keys=True)
+
+
+def all_refs():
+    return _load()

@@ -1,5 +1,5 @@
 """Entry point. Reads content/posts.yaml, publishes any post that is due and
-not yet sent, and records what went out. Run hourly by GitHub Actions.
+not yet sent, and records what went out (with the returned media id for metrics).
 
     python -m publisher.publish
 """
@@ -38,6 +38,24 @@ def _caption(post, for_linkedin=False):
     return "\n\n".join(p for p in parts if p)
 
 
+def _publish_one(platform, post, media, cap):
+    ptype = post.get("type", "carousel")
+    if platform == "instagram":
+        if ptype == "reel":
+            resp = instagram.publish_reel(media[0], cap)
+        elif len(media) > 1:
+            resp = instagram.publish_carousel(media, cap)
+        else:
+            resp = instagram.publish_single(media[0], cap)
+        return resp.get("id")
+    if platform == "facebook":
+        resp = facebook.publish_video(media[0], cap) if ptype == "reel" else facebook.publish_images(media, cap)
+        return resp.get("id") or resp.get("post_id")
+    if platform == "linkedin":
+        return linkedin.publish_image(media[0], _caption(post, for_linkedin=True))
+    raise ValueError(f"unknown platform {platform}")
+
+
 def run():
     now = datetime.datetime.now(datetime.timezone.utc)
     posts = yaml.safe_load(open(POSTS_FILE))["posts"]
@@ -47,32 +65,16 @@ def run():
             continue
         pid = post["id"]
         media = [_media_url(m) for m in post.get("media", [])]
-        ptype = post.get("type", "carousel")
+        cap = _caption(post)
         for platform in post.get("platforms", []):
             if state.is_published(pid, platform):
                 continue
             try:
-                cap = _caption(post)
-                if platform == "instagram":
-                    if ptype == "reel":
-                        instagram.publish_reel(media[0], cap)
-                    elif len(media) > 1:
-                        instagram.publish_carousel(media, cap)
-                    else:
-                        instagram.publish_single(media[0], cap)
-                elif platform == "facebook":
-                    if ptype == "reel":
-                        facebook.publish_video(media[0], cap)
-                    else:
-                        facebook.publish_images(media, cap)
-                elif platform == "linkedin":
-                    linkedin.publish_image(media[0], _caption(post, for_linkedin=True))
-                else:
-                    raise ValueError(f"unknown platform {platform}")
-                state.mark(pid, platform)
+                ref = _publish_one(platform, post, media, cap)
+                state.mark(pid, platform, ref)
                 sent += 1
-                print(f"PUBLISHED {pid} -> {platform}")
-            except Exception as e:  # keep going; one platform failing shouldn't block others
+                print(f"PUBLISHED {pid} -> {platform} ({ref})")
+            except Exception as e:  # one platform failing shouldn't block the others
                 print(f"FAILED {pid} -> {platform}: {e}", file=sys.stderr)
     print(f"done. {sent} post(s) published this run.")
 

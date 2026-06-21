@@ -6,7 +6,7 @@ on:
   workflow_dispatch: {}      # lets you run it manually from the Actions tab
 
 permissions:
-  contents: write            # so it can commit the published-state file back
+  contents: write            # so it can commit the published-state + dashboard data back
 
 jobs:
   publish:
@@ -26,10 +26,14 @@ jobs:
           LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
         run: python -m publisher.publish
-      - name: Save published state
+      - name: Rebuild dashboard data
+        env:
+          MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+        run: python tools/build_data.py
+      - name: Save state + dashboard data
         run: |
           git config user.name "sprig-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add content/state/published.json || true
+          git add content/state/published.json docs/data.json || true
           git commit -m "state: mark published [skip ci]" || echo "no state change"
           git push || echo "nothing to push"

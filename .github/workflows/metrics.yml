@@ -1,0 +1,35 @@
+name: metrics
+
+on:
+  schedule:
+    - cron: "30 13 * * *"   # once a day (13:30 UTC); refreshes performance numbers
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Pull performance numbers
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          GRAPH_VERSION: v21.0
+        run: python -m publisher.metrics
+      - name: Rebuild dashboard data
+        env:
+          MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+        run: python tools/build_data.py
+      - name: Commit
+        run: |
+          git config user.name "sprig-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/metrics.json docs/data.json || true
+          git commit -m "metrics: refresh [skip ci]" || echo "no change"
+          git push || echo "nothing to push"
