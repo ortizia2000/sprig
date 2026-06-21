@@ -28,6 +28,7 @@ posts:
     platforms: [instagram, facebook]
     type: reel
     media: [post2-reel.mp4]
+    cover: post2-soberania.png
     caption_en: >-
       The question nobody asks before pasting a document into ChatGPT: where does that data go.
       With Mycelium your memory runs wherever you decide. NDA, SOC 2, BAA compliant, and still real AI.

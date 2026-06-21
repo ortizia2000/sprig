@@ -120,7 +120,7 @@ function row(p){
   const fbn=(fb.reactions!=null||fb.comments!=null)? `<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
   const num=k=>{const v=ig(p,k); return v==null? `<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
   return `<tr>
-    <td><img class="thumb" loading="lazy" referrerpolicy="no-referrer" src="${esc(p.thumb||'')}" alt=""></td>
+    <td><img class="thumb" src="${esc(p.thumb||'')}" alt=""></td>
     <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(p.caption_en||'')}</div></td>
     <td>${whenLabel(p)}</td>
     <td>${chans}${fbn}</td>

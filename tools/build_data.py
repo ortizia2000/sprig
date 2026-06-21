@@ -34,7 +34,7 @@ def run():
             "tz": p.get("tz", "America/New_York"),
             "type": p.get("type"),
             "platforms": p.get("platforms", []),
-            "thumb": f"{MEDIA_BASE.rstrip('/')}/{os.path.basename(p['media'][0])}" if p.get("media") else None,
+            "thumb": ("media/" + os.path.basename(p.get("cover") or p["media"][0])) if (p.get("cover") or p.get("media")) else None,
             "media": [f"{MEDIA_BASE.rstrip('/')}/{os.path.basename(m)}" for m in p.get("media", [])],
             "caption_en": p.get("caption_en", "").strip(),
             "caption_es": p.get("caption_es", "").strip(),

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-21T15:36+00:00",
+  "updated": "2026-06-21T15:39+00:00",
   "posts": [
     {
       "id": "post1",
@@ -11,7 +11,7 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-en.png",
+      "thumb": "media/post1-en.png",
       "media": [
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-en.png",
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post1-launch.png"
@@ -32,7 +32,7 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post2-reel.mp4",
+      "thumb": "media/post2-soberania.png",
       "media": [
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post2-reel.mp4"
       ],
@@ -52,7 +52,7 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-en.png",
+      "thumb": "media/post3-en.png",
       "media": [
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-en.png",
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post3-5cosas.png"
@@ -73,7 +73,7 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-en.png",
+      "thumb": "media/post4-en.png",
       "media": [
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-en.png",
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post4-buildinpublic.png"
@@ -94,7 +94,7 @@
         "instagram",
         "facebook"
       ],
-      "thumb": "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-en.png",
+      "thumb": "media/post5-en.png",
       "media": [
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-en.png",
         "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media/post5-equipo.png"
