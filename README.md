@@ -51,6 +51,16 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 ### 4. Test it
 Repo → **Actions → publish → Run workflow**. Check the logs for `PUBLISHED ...`. Then it runs hourly on its own.
 
+## Dashboard
+
+A static dashboard lives in `docs/` and shows every post, its status, and (once live)
+performance numbers pulled from the IG/FB APIs. It reads `docs/data.json`, which the
+publish + metrics workflows rebuild and commit automatically.
+
+Turn it on once: repo → **Settings → Pages → Source: Deploy from a branch → `main` / `/docs` → Save**.
+It will be served at **https://ortizia2000.github.io/sprig/**. "Edit the queue" on the page links
+straight to the GitHub editor for `posts.yaml`.
+
 ## Adding posts
 Drop the image(s)/video in `content/media/`, add an entry to `content/posts.yaml`, commit. Done.
 
