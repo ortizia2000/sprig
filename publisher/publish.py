@@ -4,6 +4,7 @@ not yet sent, and records what went out (with the returned media id for metrics)
     python -m publisher.publish
 """
 import datetime
+import json
 import os
 import sys
 
@@ -18,15 +19,28 @@ from . import config, facebook, instagram, linkedin, state
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 POSTS_FILE = os.path.join(ROOT, "content", "posts.yaml")
+SCHEDULE_FILE = os.path.join(ROOT, "content", "schedule.json")
+
+
+def _overrides():
+    """Per-post date/time overrides set from the dashboard (drag-drop / edit)."""
+    try:
+        with open(SCHEDULE_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 
 def _media_url(rel):
     return f"{config.MEDIA_BASE_URL.rstrip('/')}/{os.path.basename(rel)}"
 
 
-def _is_due(post, now_utc):
+def _is_due(post, now_utc, overrides):
+    o = overrides.get(post["id"], {})
+    date = o.get("date", post["date"])
+    time = o.get("time", post["time"])
     tz = ZoneInfo(post.get("tz", "America/New_York"))
-    scheduled = datetime.datetime.fromisoformat(f"{post['date']}T{post['time']}").replace(tzinfo=tz)
+    scheduled = datetime.datetime.fromisoformat(f"{date}T{time}").replace(tzinfo=tz)
     return now_utc >= scheduled
 
 
@@ -59,9 +73,10 @@ def _publish_one(platform, post, media, cap):
 def run():
     now = datetime.datetime.now(datetime.timezone.utc)
     posts = yaml.safe_load(open(POSTS_FILE))["posts"]
+    overrides = _overrides()
     sent = 0
     for post in posts:
-        if not _is_due(post, now):
+        if not _is_due(post, now, overrides):
             continue
         pid = post["id"]
         media = [_media_url(m) for m in post.get("media", [])]

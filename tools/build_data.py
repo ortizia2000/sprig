@@ -23,14 +23,16 @@ def run():
     posts = yaml.safe_load(open(os.path.join(ROOT, "content", "posts.yaml")))["posts"]
     state = _read_json(os.path.join(ROOT, "content", "state", "published.json"), {})
     metrics = _read_json(os.path.join(ROOT, "content", "metrics.json"), {})
+    sched = _read_json(os.path.join(ROOT, "content", "schedule.json"), {})
 
     rows = []
     for p in posts:
         pid = p["id"]
+        ov = sched.get(pid, {})
         rows.append({
             "id": pid,
-            "date": str(p.get("date")),
-            "time": p.get("time"),
+            "date": str(ov.get("date", p.get("date"))),
+            "time": ov.get("time", p.get("time")),
             "tz": p.get("tz", "America/New_York"),
             "type": p.get("type"),
             "platforms": p.get("platforms", []),
