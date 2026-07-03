@@ -20,14 +20,33 @@ content/media/        (raw image + video URLs Instagram fetches)
 
 ## One-time setup (~30–45 min, no coding)
 
-### 1. Meta app + token (covers Instagram + Facebook)
-1. [developers.facebook.com](https://developers.facebook.com) → **Create App** → type **Business**.
-2. Add the **Instagram Graph API** + **Facebook Login** products.
-3. Connect the **Mycelium AI** Page and **@myceliumai.co** (already linked) to the app.
-4. Generate a **Page access token** with: `instagram_basic`, `instagram_content_publish`,
+### 1a. Instagram — Direct Login (recommended: no Facebook Page, no System User)
+The easiest way to get Instagram working, using ["API setup with Instagram Login"](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login) (launched July 2024):
+1. Make the IG account **Creator** or **Business**: Instagram app → Settings → Account type and tools → Switch to Professional.
+2. [developers.facebook.com](https://developers.facebook.com) → **Create App** → use case **Other** → type **Business**.
+3. Add the **Instagram** product → **API setup with Instagram Login** → connect **@myceliumai.co**.
+   Add a placeholder OAuth Redirect URI (e.g. `https://localhost.local/cb`). Note the App ID + App Secret.
+4. Authorize in the browser (`api.instagram.com/oauth/authorize`) with scopes
+   **`instagram_business_basic` + `instagram_business_content_publish`**
+   — the old names (`instagram_basic`, `instagram_content_publish`) **stopped working 2025-01-27**.
+   The redirect lands on a 404; that's expected — copy the `code` from the URL.
+5. Exchange the code for a short-lived token (`POST api.instagram.com/oauth/access_token` — also
+   returns your `user_id`, which is `IG_USER_ID`), then exchange that for a **long-lived 60-day token**
+   (`GET graph.instagram.com/access_token?grant_type=ig_exchange_token`). Save it as `IG_ACCESS_TOKEN`.
+6. **Refresh before day 60** (calendar reminder at ~day 55):
+   ```bash
+   curl -G https://graph.instagram.com/refresh_access_token \
+     -d grant_type=ig_refresh_token -d access_token=$CURRENT_TOKEN
+   ```
+
+### 1b. Facebook — Page token (required for FB posting; can also cover IG if linked)
+1. In the same (or a separate) Meta app, add **Facebook Login for Business**.
+2. Connect the **Mycelium AI** Page and generate a **Page access token** with
    `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
    - Best: create a **System User** in Business Settings and give it a **never-expiring** token (no refresh ever).
-5. Grab the **Page ID** (Page → About) and confirm the **IG business id** (`17841434173594422`).
+3. Grab the **Page ID** (Page → About) → `FB_PAGE_ID`, token → `META_ACCESS_TOKEN`.
+   - If the IG account is linked to this Page and the token also has the Instagram permissions,
+     you can skip 1a entirely and leave `IG_ACCESS_TOKEN` unset — IG calls then use this token.
    - Self-publishing to your own account does **not** need Meta App Review — just add your account
      as a role/tester on the app while it's in Development mode.
 
@@ -41,15 +60,20 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 
 | Secret | Value |
 |---|---|
-| `META_ACCESS_TOKEN` | the Page / System User token |
+| `IG_ACCESS_TOKEN` | the Direct Login 60-day token (path 1a; leave unset if using the Page token for IG) |
 | `IG_USER_ID` | `17841434173594422` |
+| `META_ACCESS_TOKEN` | the Page / System User token (path 1b) |
 | `FB_PAGE_ID` | your Mycelium AI Page id |
 | `MEDIA_BASE_URL` | `https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media` |
 | `LINKEDIN_ACCESS_TOKEN` | (later) |
 | `LINKEDIN_ORG_ID` | (later) |
 
-### 4. Test it
-Repo → **Actions → publish → Run workflow**. Check the logs for `PUBLISHED ...`. Then it runs hourly on its own.
+### 4. Pre-flight check, then test it
+Repo → **Actions → check → Run workflow**. It verifies the tokens against the live API
+(prints the IG username / FB Page name it's about to post as) and HEAD-requests every media
+URL to confirm Meta will be able to fetch it — without publishing anything.
+Once it's green: **Actions → publish → Run workflow**, check the logs for `PUBLISHED ...`.
+Then it runs hourly on its own.
 
 ## Dashboard
 
@@ -78,10 +102,27 @@ Drop the image(s)/video in `content/media/`, add an entry to `content/posts.yaml
 pip install -r requirements.txt
 cp .env.example .env   # fill in tokens
 set -a && source .env && set +a
+python tools/check_auth.py     # pre-flight: tokens + media reachability
 python -m publisher.publish
 ```
+Tests (no network, no tokens needed): `pip install pytest && python -m pytest tests/`
+
+## Instagram limits & gotchas
+
+Hard limits (Meta):
+- Carousels take **2–10** items; images **≤ 8 MB**, aspect ratio between **4:5 and 1.91:1**.
+- JPEG is the documented format; PNG works in practice. Max 100 published posts per 24 h.
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `Invalid OAuth access token` / scope error | Token expired or made with the pre-2025 scope names | Redo path 1a (or refresh if < 60 days old) |
+| `400 Image url is invalid` | Meta can't fetch the media URL | Run the **check** workflow; verify `MEDIA_BASE_URL` and that the repo/host is public |
+| `Subject must be a business account` | IG account is still Personal | Switch it to Creator/Business in the IG app |
+| Container stuck `IN_PROGRESS`, then timeout | Image too big or wrong ratio | Keep ≤ 8 MB and 4:5–1.91:1; re-export |
+| Reel container slow | Normal — video processing | The publisher polls up to ~4 min before giving up |
 
 ## Notes
 - Repo is public so Instagram can fetch the images. No tokens live in the code — they're GitHub secrets.
   To go private later, move `content/media/` to a public host and update `MEDIA_BASE_URL`.
-- v1 is untested against live tokens; expect to debug a Meta gotcha or two on the first real run.
+- v1 is untested against live tokens; run the **check** workflow first — it catches the common
+  Meta gotchas (bad token, wrong account type, unfetchable media) before anything goes out.

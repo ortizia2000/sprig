@@ -17,8 +17,8 @@ METRICS_FILE = os.path.join(os.path.dirname(__file__), "..", "content", "metrics
 def _ig_insights(media_id):
     for metric_set in ("reach,likes,comments,saved", "reach,likes,comments,saved,views,plays,shares"):
         r = requests.get(
-            f"{config.GRAPH}/{media_id}/insights",
-            params={"metric": metric_set, "access_token": config.META_TOKEN},
+            f"{config.IG_GRAPH}/{media_id}/insights",
+            params={"metric": metric_set, "access_token": config.IG_TOKEN},
             timeout=30,
         )
         if r.ok:
