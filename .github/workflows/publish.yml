@@ -8,6 +8,12 @@ on:
 permissions:
   contents: write            # so it can commit the published-state + dashboard data back
 
+# never two publish runs at once — a slow run racing the next hourly cron
+# would see the same posts as unpublished and double-post them
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -18,23 +24,32 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Publish due posts
+        id: publish
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_MEMBER_ID: ${{ secrets.LINKEDIN_MEMBER_ID }}
           LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
         run: python -m publisher.publish
+      # Publishing exits 1 if any post failed (run shows red), but state for the
+      # posts that DID publish must still be committed — even if the run was
+      # cancelled mid-way (always()). Losing published.json means double-posting
+      # next hour. Skipped only if publish never started (checkout/pip failure).
       - name: Rebuild dashboard data
+        if: ${{ always() && steps.publish.outcome != 'skipped' }}
         env:
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
         run: python tools/build_data.py
       - name: Save state + dashboard data
+        if: ${{ always() && steps.publish.outcome != 'skipped' }}
         run: |
           git config user.name "sprig-bot"
           git config user.email "actions@users.noreply.github.com"
           git add content/state/published.json docs/data.json || true
           git commit -m "state: mark published [skip ci]" || echo "no state change"
-          git push || echo "nothing to push"
+          git pull --rebase origin main
+          git push

@@ -8,9 +8,18 @@ META_TOKEN = os.environ.get("META_ACCESS_TOKEN", "")
 IG_USER_ID = os.environ.get("IG_USER_ID", "")      # @myceliumai.co business id = 17841434173594422
 FB_PAGE_ID = os.environ.get("FB_PAGE_ID", "")       # Mycelium AI Page id
 
-# LinkedIn (organization posting — needs a LinkedIn app + Community Management access)
+# LinkedIn — two author modes, see publisher/linkedin.py:
+#  - member (live today): "Share on LinkedIn" + w_member_social are granted on app
+#    78lsrn9iubh388, so posts go out as Nelly. LINKEDIN_MEMBER_ID is optional; when
+#    unset it is resolved from /v2/userinfo using the openid scope on the same app.
+#  - organization (Mycelium AI Page): needs the Community Management API, which was
+#    denied on app 78imrbqhk3t1bq. Set LINKEDIN_ORG_ID only once that is approved.
 LINKEDIN_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN", "")
 LINKEDIN_ORG_ID = os.environ.get("LINKEDIN_ORG_ID", "")
+LINKEDIN_MEMBER_ID = os.environ.get("LINKEDIN_MEMBER_ID", "")
+# Versioned-API date. LinkedIn retires versions about a year out, so this needs an
+# occasional bump; override by env when calls start coming back 426 instead of 200.
+LINKEDIN_VERSION = os.environ.get("LINKEDIN_VERSION") or "202508"
 
 # Instagram auth — two flows, pick one:
 #  - Direct Login (easiest, no Facebook Page needed): set IG_ACCESS_TOKEN and all

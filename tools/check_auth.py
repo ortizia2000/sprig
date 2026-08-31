@@ -25,6 +25,13 @@ def _err(r):
         return ""
 
 
+def _li_err(r):
+    try:
+        return r.json().get("message", "")
+    except ValueError:
+        return ""
+
+
 def check_instagram():
     if not (config.IG_TOKEN and config.IG_USER_ID):
         print("SKIP instagram: IG token / IG_USER_ID not configured")
@@ -55,6 +62,44 @@ def check_facebook():
         print(f"OK   facebook: token valid, Page \"{r.json().get('name')}\"")
         return True
     print(f"FAIL facebook: {r.status_code} {_err(r)}")
+    return False
+
+
+def check_linkedin():
+    """Read-only: proves the token works and shows exactly who Sprig would post as."""
+    if not config.LINKEDIN_TOKEN:
+        print("SKIP linkedin: LINKEDIN_ACCESS_TOKEN not configured")
+        return None
+    if config.LINKEDIN_ORG_ID:
+        r = requests.get(
+            "https://api.linkedin.com/rest/organizationAcls",
+            params={"q": "roleAssignee", "role": "ADMINISTRATOR", "state": "APPROVED"},
+            headers={"Authorization": f"Bearer {config.LINKEDIN_TOKEN}",
+                     "LinkedIn-Version": config.LINKEDIN_VERSION,
+                     "X-Restli-Protocol-Version": "2.0.0"},
+            timeout=30,
+        )
+        if r.ok:
+            orgs = [e.get("organization", "") for e in r.json().get("elements", [])]
+            target = f"urn:li:organization:{config.LINKEDIN_ORG_ID}"
+            if target in orgs:
+                print(f"OK   linkedin: token admins {target}")
+                return True
+            print(f"FAIL linkedin: token does not admin {target} (sees: {orgs or 'none'})")
+            return False
+        print(f"FAIL linkedin (org): {r.status_code} {_li_err(r)}")
+        return False
+    r = requests.get(
+        "https://api.linkedin.com/v2/userinfo",
+        headers={"Authorization": f"Bearer {config.LINKEDIN_TOKEN}"},
+        timeout=30,
+    )
+    if r.ok:
+        me = r.json()
+        print(f"OK   linkedin: token valid, posts as {me.get('name')} "
+              f"(urn:li:person:{me.get('sub')})")
+        return True
+    print(f"FAIL linkedin: {r.status_code} {_li_err(r)}")
     return False
 
 
@@ -91,7 +136,7 @@ def check_media(urls=None):
 
 
 def main():
-    results = [check_instagram(), check_facebook(), check_media()]
+    results = [check_instagram(), check_facebook(), check_linkedin(), check_media()]
     if False in results:
         print("\nPre-flight FAILED — fix the FAIL lines above before publishing.")
         return 1

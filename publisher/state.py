@@ -4,7 +4,8 @@ The GitHub Action commits this file back so reruns never double-post."""
 import json
 import os
 
-STATE_FILE = os.path.join(os.path.dirname(__file__), "..", "content", "state", "published.json")
+STATE_FILE = os.environ.get("SPRIG_STATE_FILE") or \
+    os.path.join(os.path.dirname(__file__), "..", "content", "state", "published.json")
 
 
 def _load():
