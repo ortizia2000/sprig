@@ -103,6 +103,22 @@ def check_linkedin():
     return False
 
 
+def check_tiktok():
+    """Read-only-ish: mints a 24h access token from the refresh token, which proves
+    the client key/secret/refresh-token trio works. Publishes nothing."""
+    if not config.TIKTOK_REFRESH_TOKEN:
+        print("SKIP tiktok: TIKTOK_REFRESH_TOKEN not configured")
+        return None
+    from publisher import tiktok
+    try:
+        tiktok._access_token()
+        print(f"OK   tiktok: token refresh works (mode: {config.TIKTOK_MODE})")
+        return True
+    except Exception as e:
+        print(f"FAIL tiktok: {e}")
+        return False
+
+
 def _media_urls():
     with open(POSTS_FILE) as f:
         posts = yaml.safe_load(f)["posts"]
@@ -136,7 +152,7 @@ def check_media(urls=None):
 
 
 def main():
-    results = [check_instagram(), check_facebook(), check_linkedin(), check_media()]
+    results = [check_instagram(), check_facebook(), check_linkedin(), check_tiktok(), check_media()]
     if False in results:
         print("\nPre-flight FAILED — fix the FAIL lines above before publishing.")
         return 1

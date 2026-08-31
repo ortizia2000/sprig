@@ -33,6 +33,9 @@ jobs:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_MEMBER_ID: ${{ secrets.LINKEDIN_MEMBER_ID }}
           LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
         run: python -m publisher.publish
       # Publishing exits 1 if any post failed (run shows red), but state for the

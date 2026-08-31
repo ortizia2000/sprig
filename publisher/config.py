@@ -32,6 +32,15 @@ IG_TOKEN = IG_ACCESS_TOKEN or META_TOKEN
 IG_GRAPH = os.environ.get("IG_API_BASE") or \
     ("https://graph.instagram.com/v22.0" if IG_ACCESS_TOKEN else GRAPH)
 
+# TikTok (Content Posting API). Video-only. Until TikTok's app audit is passed,
+# keep TIKTOK_MODE=inbox: videos land in her TikTok inbox as drafts and she taps
+# publish in-app (direct public posting is audit-gated). See publisher/tiktok.py.
+TIKTOK_CLIENT_KEY = os.environ.get("TIKTOK_CLIENT_KEY", "")
+TIKTOK_CLIENT_SECRET = os.environ.get("TIKTOK_CLIENT_SECRET", "")
+TIKTOK_REFRESH_TOKEN = os.environ.get("TIKTOK_REFRESH_TOKEN", "")
+TIKTOK_MODE = os.environ.get("TIKTOK_MODE") or "inbox"          # inbox | direct
+TIKTOK_PRIVACY = os.environ.get("TIKTOK_PRIVACY") or "SELF_ONLY"  # direct mode only
+
 # Public base URL Instagram/Facebook fetch images from (raw GitHub by default).
 # `or` (not a get-default) so an empty env var from an unset secret still falls back.
 MEDIA_BASE_URL = os.environ.get("MEDIA_BASE_URL") or \

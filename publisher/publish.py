@@ -15,7 +15,7 @@ try:
 except ImportError:  # pragma: no cover
     ZoneInfo = None
 
-from . import config, facebook, instagram, linkedin, state
+from . import config, facebook, instagram, linkedin, state, tiktok
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 # SPRIG_* env overrides let tests/experiments run against a scratch queue
@@ -85,6 +85,10 @@ def _publish_one(platform, post, media, cap):
     if platform == "facebook":
         resp = facebook.publish_video(media[0], cap) if ptype == "reel" else facebook.publish_images(media, cap)
         return resp.get("id") or resp.get("post_id")
+    if platform == "tiktok":
+        if ptype != "reel":
+            raise RuntimeError("TikTok is video-only — only reel posts can list `tiktok`")
+        return tiktok.publish_video(media[0], _caption(post))
     if platform == "linkedin":
         if ptype == "reel":
             raise RuntimeError(
