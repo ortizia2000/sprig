@@ -41,6 +41,7 @@ def run():
             "caption_en": p.get("caption_en", "").strip(),
             "caption_es": p.get("caption_es", "").strip(),
             "hashtags": p.get("hashtags", "").strip(),
+            "review": bool(p.get("review", False)),
             "published": list(state.get(pid, {}).keys()),
             "metrics": metrics.get(pid, {}),
         })

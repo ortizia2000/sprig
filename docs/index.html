@@ -63,6 +63,8 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:60;opacity:0;transition:opacity .2s}
   .toast.show{opacity:1}
   footer{margin-top:18px;font-size:12px;color:var(--mut)}
+  .pill.rev{background:#fdf3e3;color:#9a6b12;border-color:#efdcb4}
+  td.when.rev{color:var(--mut);font-style:italic}
 
 /* ---- preview modal ---- */
 #pv{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:60;padding:24px;overflow:auto}
@@ -100,7 +102,7 @@ tbody tr[data-pid]{cursor:pointer}
     <button class="f" id="editBtn"></button>
     <div class="seg" id="viewF"><button data-v="table" class="on">Table</button><button data-v="calendar">Calendar</button></div>
     <span class="spacer"></span>
-    <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button></div>
+    <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="review">In review</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button></div>
     <div class="seg" id="chanF"><button data-v="all" class="on">All</button><button data-v="instagram">IG</button><button data-v="facebook">FB</button><button data-v="linkedin">LI</button></div>
   </div>
   <div class="stats" id="stats"></div>
@@ -129,7 +131,9 @@ const token=()=>localStorage.getItem("sprig_token");
 const editing=()=>!!token();
 
 function filtered(){return DATA.filter(p=>{
-  if(fStatus==="published"&&!isPub(p))return false; if(fStatus==="scheduled"&&isPub(p))return false;
+  if(fStatus==="review"&&!p.review)return false;
+  if(fStatus==="published"&&!isPub(p))return false;
+  if(fStatus==="scheduled"&&(isPub(p)||p.review))return false;
   if(fChan!=="all"&&!(p.platforms||[]).includes(fChan))return false; return true;});}
 function sorted(rows){return rows.slice().sort((a,b)=>{let va,vb;
   if(sortK==="when"){va=tsOf(a);vb=tsOf(b);}else{va=ig(a,sortK)??-1;vb=ig(b,sortK)??-1;}return (va-vb)*sortDir;});}
@@ -140,13 +144,13 @@ function renderTable(){
     return `<th class="${c.sort?'sortable':''} ${c.num?'num':''}" data-k="${c.k}">${c.t} ${ar}</th>`;}).join("");
   const rows=sorted(filtered()).map(p=>{
     const chans=(p.platforms||[]).map(pl=>{const l=(p.published||[]).includes(pl);
-      return `<span class="pill ${l?'live':'sched'}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
+      return `<span class="pill ${l?'live':(p.review?'rev':'sched')}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
     const fb=((p.metrics||{}).facebook)||{};
     const fbn=(fb.reactions!=null||fb.comments!=null)?`<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
     const num=k=>{const v=ig(p,k);return v==null?`<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
     return `<tr data-pid="${esc(p.id)}"><td><img class="thumb" src="${esc(p.thumb||'')}" alt=""></td>
       <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(p.caption_en||'')}</div></td>
-      <td class="when ${editing()?'edit':''}" data-id="${esc(p.id)}">${fmtWhen(p)}</td>
+      <td class="when ${p.review?'rev':(editing()?'edit':'')}" data-id="${esc(p.id)}">${p.review?'Pendiente de aprobación':fmtWhen(p)}</td>
       <td>${chans}${fbn}</td><td><span class="type">${esc(p.type)}</span></td>
       ${num("reach")}${num("likes")}${num("comments")}${num("saved")}</tr>`;}).join("")
     || `<tr><td colspan="9" style="color:var(--mut);padding:20px">No posts match this filter.</td></tr>`;
@@ -245,7 +249,8 @@ function setEditBtn(){const b=document.getElementById("editBtn");
   else{b.textContent="🔒 Enable editing";b.classList.remove("on");b.onclick=tokenModal;}}
 /* ---------- shell ---------- */
 function stats(){const pub=DATA.filter(isPub).length,reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
-  const c=[["Posts",DATA.length],["Published",pub],["Scheduled",DATA.length-pub]]; if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
+  const rev=DATA.filter(p=>p.review).length;
+  const c=[["Posts",DATA.length],["Published",pub],["Scheduled",DATA.length-pub-rev],["In review",rev]]; if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
   document.getElementById("stats").innerHTML=c.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");}
 /* ---------- preview ---------- */
 let pvI=0, pvM=[];
@@ -269,7 +274,7 @@ function openPreview(id){
   pvWire();
   pvM=p.media||[];
   document.getElementById("pvtitle").textContent=p.id;
-  document.getElementById("pvmeta").textContent=fmtWhen(p)+"  \u00b7  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  \u00b7  "+p.type;
+  document.getElementById("pvmeta").textContent=(p.review?"En revisión, sin fecha":fmtWhen(p))+"  \u00b7  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  \u00b7  "+p.type;
   const cap=[p.caption_en,p.caption_es].filter(x=>x&&x.trim()).join("\n\n");
   document.getElementById("pvcap").textContent=cap;
   document.getElementById("pvtags").textContent=p.hashtags||"";

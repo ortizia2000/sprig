@@ -53,6 +53,11 @@ def _scheduled_at(post, overrides):
 
 
 def _is_due(post, now_utc, overrides):
+    # Retenido a proposito: esperando aprobacion. No se publica aunque la fecha
+    # haya pasado. Quitar `review: true` de posts.yaml es lo que lo libera.
+    if post.get("review"):
+        print(f"REVIEW {post['id']}: en revision, no se publica")
+        return False
     scheduled = _scheduled_at(post, overrides)
     if now_utc < scheduled:
         return False

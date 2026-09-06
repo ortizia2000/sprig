@@ -5,6 +5,7 @@
 
 posts:
   - id: post1
+    review: true   # retenido: esperando aprobacion de Nelly
     date: "2026-06-21"
     time: "12:00"
     tz: America/New_York
@@ -22,6 +23,7 @@ posts:
     hashtags: "#SegundoCerebro #SecondBrain #IA #AI #MemoriaIA #InteligenciaArtificial #BuildInPublic #PKM"
 
   - id: post2
+    review: true   # retenido: esperando aprobacion de Nelly
     date: "2026-06-22"
     time: "12:00"
     tz: America/New_York
@@ -40,6 +42,7 @@ posts:
     hashtags: "#PrivacidadIA #DataPrivacy #SegundoCerebro #SecondBrain #SOC2 #AISovereignty #BuildInPublic"
 
   - id: post3
+    review: true   # retenido: esperando aprobacion de Nelly
     date: "2026-06-23"
     time: "12:00"
     tz: America/New_York
@@ -59,6 +62,7 @@ posts:
     hashtags: "#SegundoCerebro #SecondBrain #Productividad #PKM #Obsidian #Notion #AITools"
 
   - id: post4
+    review: true   # retenido: esperando aprobacion de Nelly
     date: "2026-06-24"
     time: "12:00"
     tz: America/New_York
@@ -78,6 +82,7 @@ posts:
     hashtags: "#BuildInPublic #ConstruyeEnPúblico #Startup #Founders #ContextLayer #EnterpriseAI"
 
   - id: post5
+    review: true   # retenido: esperando aprobacion de Nelly
     date: "2026-06-25"
     time: "12:00"
     tz: America/New_York
