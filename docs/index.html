@@ -266,6 +266,7 @@ function pvShow(n){
 }
 function openPreview(id){
   const p=DATA.find(x=>x.id===id); if(!p) return;
+  pvWire();
   pvM=p.media||[];
   document.getElementById("pvtitle").textContent=p.id;
   document.getElementById("pvmeta").textContent=fmtWhen(p)+"  \u00b7  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  \u00b7  "+p.type;
@@ -281,11 +282,17 @@ function openPreview(id){
   document.getElementById("pv").classList.add("on");
   pvShow(0);
 }
-function pvClose(){ document.getElementById("pv").classList.remove("on"); }
-document.getElementById("pvclose").onclick=pvClose;
-document.getElementById("pv").onclick=e=>{ if(e.target.id==="pv") pvClose(); };
-document.getElementById("pvprev").onclick=()=>pvShow(pvI-1);
-document.getElementById("pvnext").onclick=()=>pvShow(pvI+1);
+function pvClose(){ const e=document.getElementById("pv"); if(e) e.classList.remove("on"); }
+let pvWired=false;
+function pvWire(){
+  if(pvWired) return;
+  const box=document.getElementById("pv"); if(!box) return;
+  document.getElementById("pvclose").onclick=pvClose;
+  box.onclick=e=>{ if(e.target.id==="pv") pvClose(); };
+  document.getElementById("pvprev").onclick=()=>pvShow(pvI-1);
+  document.getElementById("pvnext").onclick=()=>pvShow(pvI+1);
+  pvWired=true;
+}
 addEventListener("keydown",e=>{
   if(!document.getElementById("pv").classList.contains("on")) return;
   if(e.key==="Escape")pvClose();
