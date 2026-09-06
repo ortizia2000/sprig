@@ -100,6 +100,7 @@ posts:
     hashtags: "#SegundoCerebro #SecondBrain #AIagents #Branding #Mycelium #BuildInPublic"
 
   - id: banquete-mta
+    review: true   # YA PUBLICADO por Metricool 2026-09-06 13:23 ET. Retenido para que Sprig no lo duplique.
     date: "2026-09-06"
     time: "11:30"
     tz: America/New_York
