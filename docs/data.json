@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-06T04:58+00:00",
+  "updated": "2026-09-06T05:13+00:00",
   "posts": [
     {
       "id": "post1",
@@ -107,8 +107,8 @@
     },
     {
       "id": "banquete-mta",
-      "date": "2026-09-07",
-      "time": "15:00",
+      "date": "2026-09-06",
+      "time": "11:30",
       "tz": "America/New_York",
       "type": "carousel",
       "platforms": [
