@@ -93,3 +93,52 @@ posts:
       hacen el trabajo. Todos beben del mismo cerebro. Esta semana te los vamos presentando. ¿Con cuál
       empezarías.
     hashtags: "#SegundoCerebro #SecondBrain #AIagents #Branding #Mycelium #BuildInPublic"
+
+  - id: banquete-mta
+    date: "2026-09-07"
+    time: "15:00"
+    tz: America/New_York
+    platforms: [instagram, facebook]
+    type: carousel
+    media: [banquete-mta-1.jpg, banquete-mta-2.jpg, banquete-mta-3.jpg, banquete-mta-4.jpg, banquete-mta-5.jpg]
+    # Post en español unicamente: la audiencia del banquete es 100% hispanohablante
+    # en Cali, asi que la regla bilingue EN-primero no aplica aqui. El texto va en
+    # caption_en porque publish.py lo pone de primero y caption_es queda vacio.
+    caption_en: >-
+      Dona a los damnificados del terremoto en Colombia y te puedes ganar nuestra clase de IA.
+
+
+      El 18 de septiembre es el 4.° Banquete de la MTA en Cali. El 80% de todo lo que se recoja va
+      para los damnificados. El 20% queda para la nueva ermita de Schoenstatt.
+
+
+      Nosotras pusimos un cupo de Instala tu Segundo Cerebro en la rifa de esa noche. Vale US$2,000.
+      No solo aprendes IA, sales con el sistema andando: una memoria continua para Claude, Codex y
+      las demás, que guarda tu contexto y te quita el trabajo repetido.
+
+
+      El premio se reclama desde cualquier país porque la clase es 100% en línea. Si donas desde
+      otra ciudad y no alcanzas a ir al banquete, igual puedes ganártelo.
+
+
+      Bono de $80.000
+
+
+      Desde Colombia: Bancolombia, llave 900284422, ahorros 82953541170
+
+      Desde el exterior: app de Western Union, transferencia por Llave, 900284422
+
+
+      Comprobante al WhatsApp 300 615 3971
+
+
+      Viernes 18 de septiembre, 7:00 p.m.
+
+      Parroquia de la Virgen Peregrina, Cali
+
+      Misa por las víctimas a las 6:00 p.m.
+
+
+      Toda la info con @schoenstatt_cali
+    caption_es: ""
+    hashtags: "#Cali #Colombia #Schoenstatt #IA #SegundoCerebro"
