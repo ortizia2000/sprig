@@ -77,11 +77,24 @@ jobs:
           args=""
           [ "${{ github.event.inputs.force }}" = "true" ] && args="$args --force"
           python tools/render_slides.py $args ${{ github.event.inputs.set }}
+      # Only rebuild + commit when a render actually changed something. build_data
+      # stamps a fresh timestamp into docs/data.json every run, so an unconditional
+      # commit would land an empty "render" commit on every skipped run.
+      - name: Anything rendered?
+        id: changed
+        run: |
+          if [ -n "$(git status --porcelain -- docs/media content/media slides)" ]; then
+            echo "yes=true" >> "$GITHUB_OUTPUT"; git status --short -- docs/media content/media slides
+          else
+            echo "yes=false" >> "$GITHUB_OUTPUT"; echo "nothing rendered, nothing to commit"
+          fi
       - name: Rebuild dashboard data
+        if: steps.changed.outputs.yes == 'true'
         env:
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
         run: python tools/build_data.py
       - name: Commit
+        if: steps.changed.outputs.yes == 'true'
         run: |
           git config user.name "sprig-bot"
           git config user.email "actions@users.noreply.github.com"
