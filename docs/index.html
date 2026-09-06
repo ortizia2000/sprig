@@ -226,7 +226,12 @@ Promise.all([
 ]).then(([d,ov])=>{
   DATA=d.posts||[]; OVR=ov||{};
   const dates=DATA.map(p=>eff(p).date).filter(Boolean).sort();
-  calMonth=dates.length?new Date(dates[0]+"T00:00:00"):new Date(); calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth(),1);
+  // Abrir en el proximo post pendiente, no en el mas viejo de la cola. Con posts
+  // caducados en el archivo, dates[0] dejaba el calendario anclado meses atras y
+  // lo recien programado quedaba invisible sin pasar meses a mano.
+  const todayS=new Date().toISOString().slice(0,10);
+  const anchor=dates.find(x=>x>=todayS);
+  calMonth=anchor?new Date(anchor+"T00:00:00"):new Date(); calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth(),1);
   document.getElementById('updated').textContent=d.updated?'updated '+d.updated.replace('T',' ')+' UTC':'';
   document.getElementById('foot').textContent="Calendar: enable editing, then drag a post to another day or double-click it to set the exact time. Metrics fill in once a post is live.";
   wireSeg("viewF",v=>view=v); wireSeg("statusF",v=>fStatus=v); wireSeg("chanF",v=>fChan=v); setEditBtn();
