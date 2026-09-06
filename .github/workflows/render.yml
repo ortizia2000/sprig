@@ -1,0 +1,91 @@
+name: render
+
+# Re-renders carousel slides (slides/<post-id>/s1..sN.html) into the JPEGs the
+# publisher posts, whenever a slide source changes. Edit a slide's text in the
+# GitHub web editor → ~2 min later the new images are in docs/media + content/media.
+#
+# Idempotent through slides/<post-id>/manifest.json (sha256 of the sources):
+# an unchanged set is never re-rendered here, so images approved from a macOS
+# render are not silently replaced by a Linux render under a scheduled post.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "slides/**"
+      - "tools/render_slides.py"
+      - ".github/workflows/render.yml"
+  workflow_dispatch:
+    inputs:
+      set:
+        description: "slide set to render (blank = every stale set)"
+        required: false
+        default: ""
+      force:
+        description: "re-render even if the manifest matches"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+      # The slides ask for Georgia / Helvetica Neue / Courier New, none of which
+      # exist on Linux. Liberation covers Arial + Courier New metrics; Gelasio is
+      # the metric-compatible Georgia. Aliased through fontconfig so the HTML
+      # stays untouched. If the Gelasio download fails the run still renders,
+      # with Liberation Serif standing in — the log says so.
+      - name: Fonts
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-liberation fontconfig >/dev/null
+          mkdir -p ~/.fonts ~/.config/fontconfig
+          css=$(curl -fsSL -A "Mozilla/5.0" "https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400;0,600;1,400" || true)
+          n=0
+          for u in $(echo "$css" | grep -o 'https://fonts.gstatic.com[^)]*\.ttf'); do
+            curl -fsSL "$u" -o ~/.fonts/gelasio-$n.ttf && n=$((n+1))
+          done
+          echo "gelasio files: $n"
+          [ "$n" -gt 0 ] || echo "::warning::Gelasio not downloaded — Georgia will fall back to Liberation Serif"
+          cat > ~/.config/fontconfig/fonts.conf <<'XML'
+          <?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+          <fontconfig>
+            <alias><family>Georgia</family><prefer><family>Gelasio</family><family>Liberation Serif</family></prefer></alias>
+            <alias><family>Helvetica Neue</family><prefer><family>Liberation Sans</family></prefer></alias>
+            <alias><family>Courier New</family><prefer><family>Liberation Mono</family></prefer></alias>
+          </fontconfig>
+          XML
+          fc-cache -f >/dev/null
+          fc-match Georgia; fc-match "Helvetica Neue"; fc-match "Courier New"
+      - name: Render stale sets
+        env:
+          CHROME: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          args=""
+          [ "${{ github.event.inputs.force }}" = "true" ] && args="$args --force"
+          python tools/render_slides.py $args ${{ github.event.inputs.set }}
+      - name: Rebuild dashboard data
+        env:
+          MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+        run: python tools/build_data.py
+      - name: Commit
+        run: |
+          git config user.name "sprig-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/media content/media slides/*/manifest.json docs/data.json || true
+          git commit -m "render: slides -> jpg [skip ci]" || echo "no change"
+          git pull --rebase origin main
+          git push

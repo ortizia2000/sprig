@@ -6,6 +6,47 @@ No monthly fee, no third-party scheduler. (Working name — rename freely.)
 
 > Built as a standalone project. Could become a product later.
 
+## Dashboard buttons (approve · edit · delete · upload) and slide rendering
+
+The dashboard at `docs/` (GitHub Pages) can now change the queue without touching
+`posts.yaml`. Click a post to open its preview; the buttons live there.
+
+| Button | What it writes | Notes |
+|---|---|---|
+| **✓ Aprobar** | `review: false` + a **new** date/time | Only on posts held with `review: true`. Always asks for the date; never reuses the stale one in the YAML. |
+| **✎ Editar** | `caption_en`, `caption_es`, `hashtags`, optionally date/time | Character counter; refuses to save past Instagram's 2,200. |
+| **🗑 Borrar** | `deleted: true` | Leaves the queue, nothing is deleted from the repo. **↩ Restaurar** undoes it. Filter *Deleted* shows them. |
+| **⇄ Reemplazar / + Añadir / − Quitar** | `media: [...]` | Uploads go to `docs/media/` **and** `content/media/`. Images are converted in the browser to JPEG ≤1440px (Instagram rejects PNG); video must already be `.mp4`. Every upload gets a new filename, old files stay. |
+| **⬆ Subir media** (toolbar) | a file only | For a post you will write by hand in `posts.yaml`; shows the URL and the YAML line. |
+
+Everything lands in `content/schedule.json` (see `publisher/overrides.py` for the keys the
+publisher honours). `posts.yaml` remains the source; the override file is the layer you touch
+from the browser. Writes need the same fine-grained GitHub token as drag-and-drop
+(*Enable editing*); it is stored only in your browser.
+
+### Slides rendered by GitHub Actions
+
+Carousel slides that are built as HTML live in `slides/<post-id>/s1.html … sN.html`
+(+ `tpl.css` + images). Editing any of those files on `main` — the GitHub web editor is
+enough — triggers `.github/workflows/render.yml`, which screenshots them with headless
+Chrome and commits `docs/media/<post-id>-<n>.jpg` + `content/media/<post-id>-<n>.jpg`
+(1440×1800 JPEG, the same output as `tools/add-media.sh`). About two minutes later the
+post shows the new images.
+
+`slides/<post-id>/manifest.json` records a hash of the sources: an unchanged set is never
+re-rendered, so images approved from a macOS render are not replaced by a Linux render
+under a post that is already scheduled. Locally:
+
+```bash
+python tools/render_slides.py --check          # STALE / FRESH per set
+python tools/render_slides.py banquete-mta     # render one set with your Chrome
+python tools/render_slides.py --record <set>   # pin the manifest to the JPEGs already on disk
+```
+
+Linux has no Georgia / Helvetica Neue / Courier New; the workflow maps them to Gelasio /
+Liberation Sans / Liberation Mono (metric-compatible), so line breaks hold. Check the first
+Linux render of a set before trusting it blindly.
+
 ## How it works
 
 ```

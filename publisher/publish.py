@@ -4,7 +4,6 @@ not yet sent, and records what went out (with the returned media id for metrics)
     python -m publisher.publish
 """
 import datetime
-import json
 import os
 import sys
 
@@ -15,7 +14,7 @@ try:
 except ImportError:  # pragma: no cover
     ZoneInfo = None
 
-from . import config, facebook, instagram, linkedin, state, tiktok
+from . import config, facebook, instagram, linkedin, overrides, state, tiktok
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 # SPRIG_* env overrides let tests/experiments run against a scratch queue
@@ -24,12 +23,9 @@ SCHEDULE_FILE = os.environ.get("SPRIG_SCHEDULE_FILE") or os.path.join(ROOT, "con
 
 
 def _overrides():
-    """Per-post date/time overrides set from the dashboard (drag-drop / edit)."""
-    try:
-        with open(SCHEDULE_FILE) as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+    """Per-post overrides set from the dashboard (reschedule / approve / edit /
+    delete / replace media). See publisher/overrides.py for the schema."""
+    return overrides.load(SCHEDULE_FILE)
 
 
 def _media_url(rel):
@@ -44,21 +40,25 @@ def _media_url(rel):
 MAX_LATE_HOURS = float(os.environ.get("SPRIG_MAX_LATE_HOURS") or 48)
 
 
-def _scheduled_at(post, overrides):
-    o = overrides.get(post["id"], {})
-    date = o.get("date", post["date"])
-    time = o.get("time", post["time"])
+def _scheduled_at(post):
+    """`post` already has its overrides applied (see run())."""
     tz = ZoneInfo(post.get("tz", "America/New_York"))
-    return datetime.datetime.fromisoformat(f"{date}T{time}").replace(tzinfo=tz)
+    return datetime.datetime.fromisoformat(f"{post['date']}T{post['time']}").replace(tzinfo=tz)
 
 
-def _is_due(post, now_utc, overrides):
+def _is_due(post, now_utc):
+    # Borrado desde el dashboard: sale de la cola sin tocar posts.yaml. Se
+    # revierte quitando la clave en content/schedule.json.
+    if post.get("deleted"):
+        print(f"DELETED {post['id']}: borrado desde el dashboard, no se publica")
+        return False
     # Retenido a proposito: esperando aprobacion. No se publica aunque la fecha
-    # haya pasado. Quitar `review: true` de posts.yaml es lo que lo libera.
+    # haya pasado. Lo libera el boton Aprobar del dashboard (override
+    # `review: false` + fecha nueva) o quitar `review: true` de posts.yaml.
     if post.get("review"):
         print(f"REVIEW {post['id']}: en revision, no se publica")
         return False
-    scheduled = _scheduled_at(post, overrides)
+    scheduled = _scheduled_at(post)
     if now_utc < scheduled:
         return False
     late_hours = (now_utc - scheduled).total_seconds() / 3600
@@ -106,12 +106,12 @@ def _publish_one(platform, post, media, cap):
 def run():
     """Publish everything due; returns the number of failed attempts."""
     now = datetime.datetime.now(datetime.timezone.utc)
-    posts = yaml.safe_load(open(POSTS_FILE))["posts"]
-    overrides = _overrides()
+    ov = _overrides()
+    posts = [overrides.apply(p, ov) for p in yaml.safe_load(open(POSTS_FILE))["posts"]]
     sent = 0
     failed = 0
     for post in posts:
-        if not _is_due(post, now, overrides):
+        if not _is_due(post, now):
             continue
         pid = post["id"]
         media = [_media_url(m) for m in post.get("media", [])]

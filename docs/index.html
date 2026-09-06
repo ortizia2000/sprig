@@ -6,7 +6,7 @@
 <title>Sprig · dashboard</title>
 <style>
   :root{ --bg:#f6f7f4; --card:#fff; --ink:#1b211d; --mut:#6b736c; --line:#e7e9e3;
-         --green:#1f9d6b; --greenbg:#e6f4ee; --accent:#0f6e56; --hover:#f2f4ef; }
+         --green:#1f9d6b; --greenbg:#e6f4ee; --accent:#0f6e56; --hover:#f2f4ef; --red:#b3261e; --redbg:#fdecea; }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);
     font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Arial,sans-serif}
   .wrap{max-width:1280px;margin:0 auto;padding:24px 18px 64px}
@@ -19,6 +19,9 @@
   a.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
   a.btn:hover,button.f:hover{border-color:var(--accent);color:var(--accent)}
   button.f.on{background:var(--green);color:#fff;border-color:var(--green)}
+  button.f.danger{color:var(--red)} button.f.danger:hover{border-color:var(--red);background:var(--redbg)}
+  button.f.danger.on{background:var(--red);border-color:var(--red);color:#fff}
+  button.f:disabled{opacity:.45;cursor:default}
   .spacer{flex:1}
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
   .seg button{font:inherit;border:0;border-radius:0;padding:7px 12px;background:#fff;cursor:pointer;font-size:13px} .seg button.on{background:var(--accent);color:#fff}
@@ -31,14 +34,18 @@
   th{position:sticky;top:0;background:#fbfcfa;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);font-weight:600;cursor:pointer;user-select:none}
   th.sortable:hover{color:var(--accent)} th .ar{opacity:.5;font-size:10px}
   tr:last-child td{border-bottom:0} tbody tr:hover{background:var(--hover)}
+  tbody tr.deleted td{opacity:.55}
   td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600} td.num.dim{color:#c4c8c1;font-weight:400}
   td.when{cursor:default} td.when.edit{cursor:pointer;color:var(--accent)} td.when.edit:hover{text-decoration:underline}
   .thumb{width:42px;height:54px;object-fit:cover;border-radius:6px;background:#e9ebe6;display:block}
   .post .id{font-weight:600;text-transform:capitalize} .post .cap{color:var(--mut);font-size:12px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-right:4px;border:1px solid}
   .pill.live{background:var(--greenbg);color:var(--green);border-color:#bfe3d2} .pill.sched{background:#fff;color:var(--mut);border-color:var(--line)}
+  .pill.rev{background:#fdf3e3;color:#9a6b12;border-color:#efdcb4}
+  .pill.del{background:var(--redbg);color:var(--red);border-color:#f3c6c2}
   .type{font-size:12px;color:#2f6fb0;background:#eef3fb;padding:2px 9px;border-radius:20px}
   .fbnote{font-size:11px;color:var(--mut);margin-top:3px}
+  td.when.rev,td.when.del{color:var(--mut);font-style:italic}
   .calbar{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px}
   .caltitle{font-size:17px;font-weight:600;min-width:170px;text-align:center}
   .calhead{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
@@ -53,26 +60,29 @@
   .chip.drag{cursor:grab} .chip.drag:active{cursor:grabbing}
   .chip img{width:18px;height:22px;object-fit:cover;border-radius:3px;background:#e9ebe6;flex:none}
   .chip span{font-size:11px;font-weight:600;text-transform:capitalize} .chip em{font-size:10px;color:var(--mut);font-style:normal;margin-left:auto}
-  .ovl{position:fixed;inset:0;background:rgba(20,24,27,.45);display:flex;align-items:center;justify-content:center;z-index:50}
-  .modal{background:#fff;border-radius:14px;padding:22px;max-width:430px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .ovl{position:fixed;inset:0;background:rgba(20,24,27,.45);display:flex;align-items:center;justify-content:center;z-index:70;padding:16px;overflow:auto}
+  .modal{background:#fff;border-radius:14px;padding:22px;max-width:430px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .modal.wide{max-width:640px}
   .modal h3{margin:0 0 8px;font-size:18px} .modal p{color:var(--mut);font-size:13px;margin:0 0 14px}
   .modal label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
-  .modal input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+  .modal input,.modal textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+  .modal textarea{min-height:110px;resize:vertical;line-height:1.45}
   .modal .row{display:flex;gap:14px} .modal .row>div{flex:1}
-  .modal .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:60;opacity:0;transition:opacity .2s}
+  .modal .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;align-items:center}
+  .modal .acts .cnt{margin-right:auto;font-size:12px;color:var(--mut)} .modal .acts .cnt.over{color:var(--red);font-weight:600}
+  .modal code{font-size:12px;background:#f2f4ef;padding:2px 6px;border-radius:5px;word-break:break-all}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:80;opacity:0;transition:opacity .2s;max-width:90vw;text-align:center}
   .toast.show{opacity:1}
   footer{margin-top:18px;font-size:12px;color:var(--mut)}
-  .pill.rev{background:#fdf3e3;color:#9a6b12;border-color:#efdcb4}
-  td.when.rev{color:var(--mut);font-style:italic}
 
 /* ---- preview modal ---- */
 #pv{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:60;padding:24px;overflow:auto}
 #pv.on{display:block}
 #pvbox{max-width:940px;margin:0 auto;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-#pvhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+#pvhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 #pvhead h3{margin:0;font-size:16px}
 #pvhead .meta{font-size:12px;color:var(--mut);margin-top:2px}
+#pvacts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 #pvclose{border:1px solid var(--line);background:none;border-radius:7px;padding:5px 11px;cursor:pointer;font-size:14px;color:inherit}
 #pvbody{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;padding:18px}
 @media(max-width:820px){#pvbody{grid-template-columns:1fr}}
@@ -87,9 +97,12 @@
 #pvthumbs button{width:44px;aspect-ratio:4/5;padding:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:none;cursor:pointer;display:grid;place-items:center}
 #pvthumbs button[aria-current="true"]{border-color:#0f8f7f;border-width:2px}
 #pvthumbs img{width:100%;height:100%;object-fit:cover;display:block}
+#pvmedia{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+#pvmedia button{font-size:12px;padding:5px 10px}
 #pvcap{white-space:pre-wrap;font-size:14px;line-height:1.6;margin:0}
 #pvtags{color:#0f8f7f;margin-top:10px;font-size:14px}
 #pvlen{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+#pvnote{margin-top:8px;font-size:12px;color:#9a6b12}
 tbody tr[data-pid]{cursor:pointer}
 </style>
 </head>
@@ -100,9 +113,10 @@ tbody tr[data-pid]{cursor:pointer}
     <a class="btn primary" href="https://github.com/ortizia2000/sprig/edit/main/content/posts.yaml" target="_blank">Edit captions ↗</a>
     <a class="btn" href="https://github.com/ortizia2000/sprig/actions/workflows/publish.yml" target="_blank">Runs ↗</a>
     <button class="f" id="editBtn"></button>
+    <button class="f" id="uploadBtn" title="Sube una imagen o video a docs/media y content/media">⬆ Subir media</button>
     <div class="seg" id="viewF"><button data-v="table" class="on">Table</button><button data-v="calendar">Calendar</button></div>
     <span class="spacer"></span>
-    <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="review">In review</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button></div>
+    <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="review">In review</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button><button data-v="deleted">Deleted</button></div>
     <div class="seg" id="chanF"><button data-v="all" class="on">All</button><button data-v="instagram">IG</button><button data-v="facebook">FB</button><button data-v="linkedin">LI</button></div>
   </div>
   <div class="stats" id="stats"></div>
@@ -111,29 +125,49 @@ tbody tr[data-pid]{cursor:pointer}
 </div>
 <div id="modalHost"></div>
 <div class="toast" id="toast"></div>
+<input type="file" id="filePick" hidden accept="image/*,video/mp4">
 
 <script>
 const REPO="ortizia2000/sprig", PLAT={instagram:"IG",facebook:"FB",linkedin:"LI"};
+const PAGES_MEDIA="https://ortizia2000.github.io/sprig/media";
+const IG_LIMIT=2200, MAX_W=1440, MAX_UPLOAD_MB=25;
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const MONLONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const COLS=[{k:"thumb",t:""},{k:"post",t:"Post"},{k:"when",t:"When",sort:1},{k:"channels",t:"Channels"},
   {k:"type",t:"Type"},{k:"reach",t:"Reach",sort:1,num:1},{k:"likes",t:"Likes",sort:1,num:1},
   {k:"comments",t:"Comments",sort:1,num:1},{k:"saved",t:"Saves",sort:1,num:1}];
-let DATA=[], OVR={}, sortK="when", sortDir=1, fStatus="all", fChan="all", view="table", calMonth=null;
-const esc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+// Override keys the publisher honours (publisher/overrides.py). Everything the
+// buttons write goes through content/schedule.json; posts.yaml is never touched here.
+const OV_KEYS=["date","time","review","deleted","caption_en","caption_es","hashtags","media"];
+let DATA=[], OVR={}, sortK="when", sortDir=1, fStatus="all", fChan="all", view="table", calMonth=null, bust=0;
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ig=(p,k)=>((p.metrics||{}).instagram||{})[k];
 const isPub=p=>(p.published||[]).length>0;
-const eff=p=>({date:(OVR[p.id]||{}).date||p.date, time:(OVR[p.id]||{}).time||p.time});
+const base=u=>String(u).split("/").pop();
+// Effective post = data.json row (overrides applied at build time, hourly) with the
+// LIVE override file on top, so a button press shows immediately. `deleted` only
+// ever comes from the override file, so it is read from there alone (a restored post
+// would otherwise stay dimmed until the next Actions rebuild).
+function eff(p){const o=OVR[p.id]||{}; const e=Object.assign({},p);
+  for(const k of OV_KEYS){ if(k in o) e[k]=o[k]; }
+  e.deleted=!!o.deleted;
+  e.mediaNames=(o.media||p.media||[]).map(base);
+  e.thumb=p.cover?("media/"+base(p.cover)):(e.mediaNames.length?"media/"+e.mediaNames[0]:p.thumb);
+  return e;}
 const tsOf=p=>{const e=eff(p);return Date.parse(e.date+"T"+(e.time||"00:00")+":00");};
-function fmtWhen(p){const e=eff(p);const [Y,M,D]=e.date.split("-");let [h,mi]=(e.time||"00:00").split(":").map(Number);
+function fmtWhen(p){const e=eff(p);const [Y,M,D]=String(e.date).split("-");let [h,mi]=(e.time||"00:00").split(":").map(Number);
   const ap=h>=12?"pm":"am",h12=(h%12)||12;return `${MON[(+M)-1]}-${D}-${Y} · ${h12}:${String(mi).padStart(2,"0")} ${ap} EST`;}
 const token=()=>localStorage.getItem("sprig_token");
 const editing=()=>!!token();
+const thumbSrc=p=>{const e=eff(p);return e.thumb?(e.thumb+(bust?"?v="+bust:"")):"";};
+const todayS=()=>{const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;};
 
-function filtered(){return DATA.filter(p=>{
-  if(fStatus==="review"&&!p.review)return false;
+function filtered(){return DATA.filter(p=>{const e=eff(p);
+  if(fStatus==="deleted") return e.deleted;
+  if(e.deleted)return false;
+  if(fStatus==="review"&&!e.review)return false;
   if(fStatus==="published"&&!isPub(p))return false;
-  if(fStatus==="scheduled"&&(isPub(p)||p.review))return false;
+  if(fStatus==="scheduled"&&(isPub(p)||e.review))return false;
   if(fChan!=="all"&&!(p.platforms||[]).includes(fChan))return false; return true;});}
 function sorted(rows){return rows.slice().sort((a,b)=>{let va,vb;
   if(sortK==="when"){va=tsOf(a);vb=tsOf(b);}else{va=ig(a,sortK)??-1;vb=ig(b,sortK)??-1;}return (va-vb)*sortDir;});}
@@ -142,15 +176,17 @@ function sorted(rows){return rows.slice().sort((a,b)=>{let va,vb;
 function renderTable(){
   const head=COLS.map(c=>{const ar=c.k===sortK?`<span class="ar">${sortDir>0?"▲":"▼"}</span>`:"";
     return `<th class="${c.sort?'sortable':''} ${c.num?'num':''}" data-k="${c.k}">${c.t} ${ar}</th>`;}).join("");
-  const rows=sorted(filtered()).map(p=>{
+  const rows=sorted(filtered()).map(p=>{const e=eff(p);
     const chans=(p.platforms||[]).map(pl=>{const l=(p.published||[]).includes(pl);
-      return `<span class="pill ${l?'live':(p.review?'rev':'sched')}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
+      return `<span class="pill ${l?'live':(e.deleted?'del':(e.review?'rev':'sched'))}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
     const fb=((p.metrics||{}).facebook)||{};
     const fbn=(fb.reactions!=null||fb.comments!=null)?`<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
     const num=k=>{const v=ig(p,k);return v==null?`<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
-    return `<tr data-pid="${esc(p.id)}"><td><img class="thumb" src="${esc(p.thumb||'')}" alt=""></td>
-      <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(p.caption_en||'')}</div></td>
-      <td class="when ${p.review?'rev':(editing()?'edit':'')}" data-id="${esc(p.id)}">${p.review?'Pendiente de aprobación':fmtWhen(p)}</td>
+    const whenCls=e.deleted?'del':(e.review?'rev':(editing()&&!isPub(p)?'edit':''));
+    const whenTxt=e.deleted?'Borrado':(e.review?'Pendiente de aprobación':fmtWhen(p));
+    return `<tr data-pid="${esc(p.id)}" class="${e.deleted?'deleted':''}"><td><img class="thumb" src="${esc(thumbSrc(p))}" alt=""></td>
+      <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(e.caption_en||'')}</div></td>
+      <td class="when ${whenCls}" data-id="${esc(p.id)}">${whenTxt}</td>
       <td>${chans}${fbn}</td><td><span class="type">${esc(p.type)}</span></td>
       ${num("reach")}${num("likes")}${num("comments")}${num("saved")}</tr>`;}).join("")
     || `<tr><td colspan="9" style="color:var(--mut);padding:20px">No posts match this filter.</td></tr>`;
@@ -160,16 +196,16 @@ function renderTable(){
     if(e.target.closest("td.when.edit")) return;
     openPreview(tr.dataset.pid);
   });
-  if(editing()) document.querySelectorAll("td.when.edit").forEach(td=>td.onclick=e=>{e.stopPropagation();openEdit(td.dataset.id)});
+  if(editing()) document.querySelectorAll("td.when.edit").forEach(td=>td.onclick=e=>{e.stopPropagation();openReschedule(td.dataset.id)});
 }
 /* ---------- calendar ---------- */
 function renderCalendar(){
-  const posts=filtered(),byDate={}; posts.forEach(p=>{const d=eff(p).date;(byDate[d]=byDate[d]||[]).push(p);});
+  const posts=filtered().filter(p=>!eff(p).deleted),byDate={}; posts.forEach(p=>{const d=eff(p).date;(byDate[d]=byDate[d]||[]).push(p);});
   const y=calMonth.getFullYear(),m=calMonth.getMonth();
   const startDow=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
-  const t=new Date(),tS=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  const tS=todayS();
   const chip=p=>`<div class="chip ${isPub(p)?'live':'sched'} ${editing()&&!isPub(p)?'drag':''}" draggable="${editing()&&!isPub(p)}" data-id="${esc(p.id)}">
-      <img src="${esc(p.thumb||'')}"><span>${esc(p.id)}</span><em>${(p.platforms||[]).map(x=>PLAT[x]).join(' ')}</em></div>`;
+      <img src="${esc(thumbSrc(p))}"><span>${esc(p.id)}</span><em>${(p.platforms||[]).map(x=>PLAT[x]).join(' ')}</em></div>`;
   let cells=""; for(let i=0;i<startDow;i++)cells+=`<div class="day empty"></div>`;
   for(let d=1;d<=days;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     cells+=`<div class="day ${ds===tS?'today':''}" data-date="${ds}"><div class="dnum">${d}</div>${(byDate[ds]||[]).map(chip).join("")}</div>`;}
@@ -180,7 +216,7 @@ function renderCalendar(){
   document.getElementById("pm").onclick=()=>{calMonth=new Date(y,m-1,1);render();};
   document.getElementById("nm").onclick=()=>{calMonth=new Date(y,m+1,1);render();};
   if(editing()) wireDnD();
-  document.querySelectorAll(".chip").forEach(c=>{ if(editing()) c.ondblclick=()=>openEdit(c.dataset.id); });
+  document.querySelectorAll(".chip").forEach(c=>{ c.onclick=()=>openPreview(c.dataset.id); if(editing()) c.ondblclick=()=>openReschedule(c.dataset.id); });
 }
 function wireDnD(){
   document.querySelectorAll(".chip.drag").forEach(c=>{
@@ -190,14 +226,18 @@ function wireDnD(){
     cell.ondragleave=()=>cell.classList.remove("dragover");
     cell.ondrop=e=>{e.preventDefault();cell.classList.remove("dragover");
       const id=e.dataTransfer.getData("text/plain"),p=DATA.find(x=>x.id===id);
-      if(!p)return; const cur=eff(p); setOverride(id,cell.dataset.date,cur.time);};
+      if(!p)return; const cur=eff(p); setOverride(id,{date:cell.dataset.date,time:cur.time});};
   });
 }
-/* ---------- editing ---------- */
-function setOverride(id,date,time){
-  OVR[id]={date,time}; render(); saveSchedule();
+/* ---------- overrides (the one write path) ---------- */
+function setOverride(id,patch){
+  OVR[id]=Object.assign({},OVR[id]||{},patch);
+  for(const k of Object.keys(OVR[id])) if(OVR[id][k]===undefined) delete OVR[id][k];
+  if(!Object.keys(OVR[id]).length) delete OVR[id];
+  stats(); render(); if(document.getElementById("pv").classList.contains("on")) fillPreview(id);
+  return saveSchedule();
 }
-function openEdit(id){
+function openReschedule(id){
   const p=DATA.find(x=>x.id===id); if(!p)return; const e=eff(p);
   modal(`<h3>Reschedule ${esc(id)}</h3><p>Set the date and time this post goes live (EST).</p>
     <div class="row"><div><label>Date</label><input id="ed" type="date" value="${e.date}"></div>
@@ -205,8 +245,75 @@ function openEdit(id){
     <div class="acts"><button class="f" id="ec">Cancel</button><button class="f on" id="es">Save</button></div>`,
     ()=>{ document.getElementById("ec").onclick=closeModal;
       document.getElementById("es").onclick=()=>{const d=document.getElementById("ed").value,tm=document.getElementById("et").value;
-        if(d&&tm){closeModal();setOverride(id,d,tm);}}; });
+        if(d&&tm){closeModal();setOverride(id,{date:d,time:tm});}}; });
 }
+/* Aprobar: siempre pregunta fecha y hora, nunca reutiliza la del YAML (esa es la
+   fecha vieja que quedo en revision). Los campos arrancan vacios a proposito. */
+function openApprove(id){
+  if(!editing()){tokenModal();return;}
+  const p=DATA.find(x=>x.id===id); if(!p)return;
+  modal(`<h3>Aprobar ${esc(id)}</h3><p>¿Cuándo sale? La fecha del archivo es vieja y no se reutiliza. Hora en EST.</p>
+    <div class="row"><div><label>Fecha</label><input id="ad" type="date" min="${todayS()}"></div>
+    <div><label>Hora</label><input id="at" type="time"></div></div>
+    <div class="acts"><button class="f" id="ac">Cancelar</button><button class="f on" id="as" disabled>Aprobar y agendar</button></div>`,
+    ()=>{ const d=document.getElementById("ad"),t=document.getElementById("at"),s=document.getElementById("as");
+      const chk=()=>{s.disabled=!(d.value&&t.value&&d.value>=todayS());}; d.oninput=t.oninput=chk;
+      document.getElementById("ac").onclick=closeModal;
+      s.onclick=()=>{closeModal();setOverride(id,{review:false,date:d.value,time:t.value}).then(ok=>{if(ok)toast(`${id} aprobado · sale ${d.value} ${t.value} EST`);});}; });
+}
+function openEdit(id){
+  if(!editing()){tokenModal();return;}
+  const p=DATA.find(x=>x.id===id); if(!p)return; const e=eff(p);
+  modal(`<h3>Editar ${esc(id)}</h3><p>Texto y horario. Las imágenes se cambian desde la vista previa. No toca <code>posts.yaml</code>: guarda en <code>schedule.json</code>.</p>
+    <label>Caption EN</label><textarea id="ce">${esc(e.caption_en)}</textarea>
+    <label>Caption ES</label><textarea id="cs">${esc(e.caption_es)}</textarea>
+    <label>Hashtags</label><input id="ch" value="${esc(e.hashtags)}">
+    <div class="row"><div><label>Fecha${e.review?' (sigue en revisión hasta Aprobar)':''}</label><input id="dd" type="date" value="${e.review?'':e.date}"></div>
+    <div><label>Hora (EST)</label><input id="dt" type="time" value="${e.review?'':e.time}"></div></div>
+    <div class="acts"><span class="cnt" id="cnt"></span><button class="f" id="xc">Cancelar</button><button class="f on" id="xs">Guardar</button></div>`,
+    ()=>{ const ce=document.getElementById("ce"),cs=document.getElementById("cs"),ch=document.getElementById("ch"),cnt=document.getElementById("cnt");
+      const len=()=>{const c=[ce.value.trim(),cs.value.trim(),ch.value.trim()].filter(Boolean).join("\n\n").length;
+        cnt.textContent=`${c} / ${IG_LIMIT} caracteres`; cnt.classList.toggle("over",c>IG_LIMIT); return c;};
+      ce.oninput=cs.oninput=ch.oninput=len; len();
+      document.getElementById("xc").onclick=closeModal;
+      document.getElementById("xs").onclick=()=>{
+        if(len()>IG_LIMIT){toast("Instagram corta en 2.200 caracteres. Recorta antes de guardar.");return;}
+        const patch={}; const put=(k,v)=>{ if(v!==(p[k]||"")||k in (OVR[id]||{})) patch[k]=v; };
+        put("caption_en",ce.value.trim()); put("caption_es",cs.value.trim()); put("hashtags",ch.value.trim());
+        const d=document.getElementById("dd").value,t=document.getElementById("dt").value;
+        if(d&&t){patch.date=d;patch.time=t;}
+        closeModal(); setOverride(id,patch).then(ok=>{if(ok)toast(`${id} guardado`);}); }; });
+}
+function openDelete(id){
+  if(!editing()){tokenModal();return;}
+  modal(`<h3>Borrar ${esc(id)}</h3><p>Sale de la cola y no se publica. No se borra nada del repo: el post, sus imágenes y su texto siguen en <code>posts.yaml</code>. Se revierte con <b>Restaurar</b>.</p>
+    <div class="acts"><button class="f" id="dc">Cancelar</button><button class="f danger on" id="ds">Borrar de la cola</button></div>`,
+    ()=>{ document.getElementById("dc").onclick=closeModal;
+      document.getElementById("ds").onclick=()=>{closeModal();setOverride(id,{deleted:true}).then(ok=>{if(ok)toast(`${id} borrado de la cola`);});}; });
+}
+function restore(id){ if(!editing()){tokenModal();return;} setOverride(id,{deleted:undefined}).then(ok=>{if(ok)toast(`${id} restaurado`);}); }
+
+/* ---------- GitHub write layer ----------
+   One function writes files; everything above calls it. When real GitHub login
+   replaces the PAT, only ghToken()/ghHeaders() change. */
+const ghHeaders=()=>({Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"});
+async function ghSha(path){
+  const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${path}?ref=main&t=`+Date.now(),{headers:ghHeaders()});
+  return r.ok?(await r.json()).sha:undefined;
+}
+async function ghPut(path,b64,message){
+  const url=`https://api.github.com/repos/${REPO}/contents/${path}`;
+  for(let attempt=0;attempt<2;attempt++){
+    const sha=await ghSha(path);
+    const r=await fetch(url,{method:"PUT",headers:Object.assign({"Content-Type":"application/json"},ghHeaders()),
+      body:JSON.stringify({message,content:b64,sha})});
+    if(r.ok) return true;
+    if(r.status===409||r.status===422) continue;   // sha raced a bot commit — refetch once
+    throw new Error("GitHub "+r.status+(r.status===401||r.status===403?" — token sin permiso de escritura":""));
+  }
+  throw new Error("GitHub conflict — inténtalo de nuevo");
+}
+const b64json=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o,null,2)+"\n")));
 async function loadOverrides(){
   try{
     const h={Accept:"application/vnd.github+json"}; if(token()) h.Authorization="Bearer "+token();
@@ -217,47 +324,111 @@ async function loadOverrides(){
   }catch(e){ return {}; }
 }
 async function saveSchedule(){
-  if(!token()){ tokenModal(); return; }
-  toast("Saving…");
+  if(!token()){ tokenModal(); return false; }
+  toast("Guardando…");
+  try{ await ghPut("content/schedule.json",b64json(OVR),"schedule: update via dashboard");
+    toast("Guardado · el publisher lo usa en la próxima corrida"); return true; }
+  catch(err){ toast("No se guardó: "+err.message); return false; }
+}
+/* ---------- media upload ---------- */
+function pickFile(){return new Promise(res=>{const i=document.getElementById("filePick");i.value="";i.onchange=()=>res(i.files[0]||null);i.click();});}
+function readAsDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});}
+// Same rule as tools/add-media.sh: images -> JPEG q90, max 1440 wide (Instagram
+// rejects PNG in image_url); videos -> only mp4 passes through, nothing transcodes here.
+async function prepareUpload(file){
+  if(file.size>MAX_UPLOAD_MB*1024*1024) throw new Error(`Archivo de ${(file.size/1048576).toFixed(0)} MB. Máximo ${MAX_UPLOAD_MB} MB por aquí; para algo más grande usa tools/add-media.sh.`);
+  if(file.type==="video/mp4") return {ext:"mp4",b64:(await readAsDataURL(file)).split(",")[1],kind:"video"};
+  if(file.type.startsWith("video/")) throw new Error("Solo video .mp4 (H.264). Convierte primero con tools/add-media.sh.");
+  if(!file.type.startsWith("image/")) throw new Error("Formato no soportado: "+file.type);
+  const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error("No se pudo leer la imagen"));im.src=URL.createObjectURL(file);});
+  const s=Math.min(1,MAX_W/img.naturalWidth), w=Math.round(img.naturalWidth*s), h=Math.round(img.naturalHeight*s);
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const ctx=c.getContext("2d");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+  const dataUrl=c.toDataURL("image/jpeg",0.9);
+  return {ext:"jpg",b64:dataUrl.split(",")[1],kind:"image",w,h};
+}
+const stamp=()=>{const d=new Date();const p=n=>String(n).padStart(2,"0");return `${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;};
+async function uploadMedia(name,prep){
+  toast(`Subiendo ${name}…`);
+  await ghPut("docs/media/"+name,prep.b64,`media: add ${name} via dashboard`);
+  await ghPut("content/media/"+name,prep.b64,`media: add ${name} via dashboard`);
+  bust=Date.now();
+  return name;
+}
+// Replace slot `idx` (or append when idx===null) on a post. Always a NEW filename:
+// no overwrite means no CDN-cache surprise and the old file stays as archive.
+async function replaceMedia(id,idx){
+  if(!editing()){tokenModal();return;}
+  const p=DATA.find(x=>x.id===id); if(!p||isPub(p))return;
+  const f=await pickFile(); if(!f)return;
   try{
-    const url=`https://api.github.com/repos/${REPO}/contents/content/schedule.json`;
-    let sha; const g=await fetch(url,{headers:{Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"}});
-    if(g.ok) sha=(await g.json()).sha;
-    const body={message:"schedule: update via dashboard",content:btoa(unescape(encodeURIComponent(JSON.stringify(OVR,null,2)))),sha};
-    const r=await fetch(url,{method:"PUT",headers:{Authorization:"Bearer "+token(),Accept:"application/vnd.github+json","Content-Type":"application/json"},body:JSON.stringify(body)});
-    if(r.ok) toast("Saved · the publisher will use the new time"); else { toast("Save failed ("+r.status+") — check your token"); }
-  }catch(err){ toast("Save failed — network/token"); }
+    const prep=await prepareUpload(f);
+    if(p.type==="reel"&&idx===0&&prep.kind!=="video") throw new Error("Un reel lleva un .mp4 en la primera posición.");
+    if(p.type!=="reel"&&prep.kind==="video") throw new Error("Este post es un carrusel; el video va en un post tipo reel.");
+    const name=`${id}-${stamp()}.${prep.ext}`;
+    await uploadMedia(name,prep);
+    const media=eff(p).mediaNames.slice(); if(idx===null) media.push(name); else media[idx]=name;
+    const ok=await setOverride(id,{media});
+    if(ok) toast(`${name} subido · ${idx===null?"añadido":"reemplazó la posición "+(idx+1)}`);
+  }catch(err){ toast(err.message); }
+}
+async function removeMedia(id,idx){
+  if(!editing()){tokenModal();return;}
+  const p=DATA.find(x=>x.id===id); if(!p||isPub(p))return;
+  const media=eff(p).mediaNames.slice(); if(media.length<=1){toast("Un post necesita al menos una imagen.");return;}
+  media.splice(idx,1); const ok=await setOverride(id,{media}); if(ok) toast(`Posición ${idx+1} quitada (el archivo sigue en el repo)`);
+}
+async function uploadLoose(){
+  if(!editing()){tokenModal();return;}
+  const f=await pickFile(); if(!f)return;
+  try{
+    const prep=await prepareUpload(f);
+    const guess=f.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"")||"media";
+    const name=await new Promise(res=>modal(`<h3>Subir media</h3><p>${prep.kind==="image"?`Imagen → JPEG ${prep.w}×${prep.h}`:"Video .mp4, sin cambios"}. Va a <code>docs/media/</code> y <code>content/media/</code>.</p>
+      <label>Nombre de archivo</label><input id="mn" value="${esc(guess)}.${prep.ext}">
+      <div class="acts"><button class="f" id="mc">Cancelar</button><button class="f on" id="ms">Subir</button></div>`,
+      ()=>{document.getElementById("mc").onclick=()=>{closeModal();res(null);};
+        document.getElementById("ms").onclick=()=>{let v=document.getElementById("mn").value.trim().toLowerCase().replace(/[^a-z0-9.-]+/g,"-");
+          if(!v.endsWith("."+prep.ext)) v=v.replace(/\.[^.]+$/,"")+"."+prep.ext; closeModal(); res(v);};}));
+    if(!name) return;
+    await uploadMedia(name,prep);
+    modal(`<h3>Listo</h3><p>Pages tarda ~1 min en servirlo.</p><p><code>${esc(PAGES_MEDIA)}/${esc(name)}</code></p>
+      <p>Para usarlo en un post nuevo, en <code>posts.yaml</code>:</p><p><code>media: [${esc(name)}]</code></p>
+      <div class="acts"><button class="f on" id="ok">Cerrar</button></div>`,()=>{document.getElementById("ok").onclick=closeModal;});
+  }catch(err){ toast(err.message); }
 }
 /* ---------- token + modal ---------- */
 function tokenModal(){
   modal(`<h3>Enable editing</h3>
-    <p>To drag-and-drop and reschedule, paste a GitHub token. It is stored only in this browser, never in the code.
-    Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">fine-grained token</a> with
-    <b>Repository access: only ${REPO}</b> and <b>Permissions → Contents → Read and write</b>.</p>
+    <p>Reprogramar, aprobar, editar, borrar y subir imágenes escriben al repo, y eso pide un GitHub token. Se guarda solo en este navegador, nunca en el código.
+    Crea un <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">fine-grained token</a> con
+    <b>Repository access: only ${REPO}</b> y <b>Permissions → Contents → Read and write</b>.</p>
     <label>GitHub token</label><input id="tk" type="password" placeholder="github_pat_…">
     <div class="acts"><button class="f" id="tc">Cancel</button><button class="f on" id="ts">Save token</button></div>`,
     ()=>{ document.getElementById("tc").onclick=closeModal;
       document.getElementById("ts").onclick=()=>{const v=document.getElementById("tk").value.trim();
         if(v){localStorage.setItem("sprig_token",v);closeModal();setEditBtn();render();toast("Editing enabled");}}; });
 }
-function modal(html,after){document.getElementById("modalHost").innerHTML=`<div class="ovl"><div class="modal">${html}</div></div>`;
+function modal(html,after){document.getElementById("modalHost").innerHTML=`<div class="ovl"><div class="modal ${html.includes('<textarea')?'wide':''}">${html}</div></div>`;
   document.querySelector(".ovl").onclick=e=>{if(e.target.classList.contains("ovl"))closeModal();}; if(after)after();}
 function closeModal(){document.getElementById("modalHost").innerHTML="";}
-let toastT; function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),2600);}
+let toastT; function toast(m){const el=document.getElementById("toast");el.textContent=m;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),3200);}
 function setEditBtn(){const b=document.getElementById("editBtn");
   if(editing()){b.textContent="🔓 Editing on";b.classList.add("on");b.onclick=()=>{if(confirm("Turn editing off and forget the token on this browser?")){localStorage.removeItem("sprig_token");setEditBtn();render();}};}
   else{b.textContent="🔒 Enable editing";b.classList.remove("on");b.onclick=tokenModal;}}
 /* ---------- shell ---------- */
-function stats(){const pub=DATA.filter(isPub).length,reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
-  const rev=DATA.filter(p=>p.review).length;
-  const c=[["Posts",DATA.length],["Published",pub],["Scheduled",DATA.length-pub-rev],["In review",rev]]; if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
+function stats(){const E=DATA.map(eff);const del=E.filter(e=>e.deleted).length;const live=DATA.filter((p,i)=>!E[i].deleted);
+  const pub=live.filter(isPub).length,reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
+  const rev=live.filter(p=>eff(p).review).length;
+  const c=[["Posts",live.length],["Published",pub],["Scheduled",live.length-pub-rev],["In review",rev]];
+  if(del)c.push(["Deleted",del]); if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
   document.getElementById("stats").innerHTML=c.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");}
 /* ---------- preview ---------- */
-let pvI=0, pvM=[];
+let pvI=0, pvM=[], pvId=null;
 const pvIsVid=u=>/\.(mp4|mov|webm|m4v)$/i.test(String(u));
 // Las miniaturas y el visor leen de docs/media (mismo origen). raw.githubusercontent
 // cross-origin ya habia fallado antes en este dashboard.
-const pvLocal=u=>"media/"+String(u).split("/").pop();
+const pvLocal=u=>"media/"+base(u)+(bust?"?v="+bust:"");
 function pvShow(n){
   pvI=Math.max(0,Math.min(pvM.length-1,n));
   const u=pvM[pvI];
@@ -269,25 +440,42 @@ function pvShow(n){
   document.getElementById("pvnext").disabled=pvI===pvM.length-1;
   [...document.getElementById("pvthumbs").children].forEach((b,k)=>b.setAttribute("aria-current",k===pvI));
 }
-function openPreview(id){
-  const p=DATA.find(x=>x.id===id); if(!p) return;
-  pvWire();
-  pvM=p.media||[];
+function fillPreview(id){
+  const p=DATA.find(x=>x.id===id); if(!p) return; const e=eff(p);
+  pvId=id; pvM=e.mediaNames;
   document.getElementById("pvtitle").textContent=p.id;
-  document.getElementById("pvmeta").textContent=(p.review?"En revisión, sin fecha":fmtWhen(p))+"  \u00b7  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  \u00b7  "+p.type;
-  const cap=[p.caption_en,p.caption_es].filter(x=>x&&x.trim()).join("\n\n");
+  const st=e.deleted?"Borrado de la cola":(e.review?"En revisión, sin fecha":fmtWhen(p));
+  document.getElementById("pvmeta").textContent=st+"  ·  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  ·  "+p.type;
+  const cap=[e.caption_en,e.caption_es].filter(x=>x&&x.trim()).join("\n\n");
   document.getElementById("pvcap").textContent=cap;
-  document.getElementById("pvtags").textContent=p.hashtags||"";
-  document.getElementById("pvlen").textContent=(cap.length+(p.hashtags?p.hashtags.length+2:0))+" caracteres  \u00b7  limite Instagram 2.200";
+  document.getElementById("pvtags").textContent=e.hashtags||"";
+  document.getElementById("pvlen").textContent=(cap.length+(e.hashtags?e.hashtags.length+2:0))+" caracteres  ·  limite Instagram 2.200";
+  const ovk=Object.keys(OVR[id]||{}); document.getElementById("pvnote").textContent=ovk.length?"Editado desde el dashboard: "+ovk.join(", "):"";
+  // actions
+  const acts=document.getElementById("pvacts"); acts.innerHTML="";
+  const btn=(t,cls,fn,title)=>{const b=document.createElement("button");b.className="f "+cls;b.textContent=t;b.onclick=fn;if(title)b.title=title;acts.appendChild(b);return b;};
+  if(isPub(p)){ /* published: nothing to change */ }
+  else if(e.deleted){ btn("↩ Restaurar","on",()=>restore(id)); }
+  else{
+    if(e.review) btn("✓ Aprobar","on",()=>openApprove(id),"Pregunta fecha y hora, luego agenda");
+    btn("✎ Editar","",()=>openEdit(id));
+    btn("🗑 Borrar","danger",()=>openDelete(id));
+  }
+  const md=document.getElementById("pvmedia"); md.innerHTML="";
+  if(!isPub(p)&&!e.deleted){
+    const b1=document.createElement("button");b1.className="f";b1.textContent="⇄ Reemplazar esta";b1.onclick=()=>replaceMedia(id,pvI);md.appendChild(b1);
+    if(p.type!=="reel"){const b2=document.createElement("button");b2.className="f";b2.textContent="+ Añadir imagen";b2.onclick=()=>replaceMedia(id,null);md.appendChild(b2);
+      const b3=document.createElement("button");b3.className="f danger";b3.textContent="− Quitar esta";b3.onclick=()=>removeMedia(id,pvI);md.appendChild(b3);}
+  }
   const th=document.getElementById("pvthumbs"); th.innerHTML="";
   pvM.forEach((u,k)=>{ const b=document.createElement("button");
     b.setAttribute("aria-label","Ver "+(k+1));
-    if(pvIsVid(u)) b.textContent="\u25b6"; else { const im=document.createElement("img"); im.src=pvLocal(u); im.alt=""; b.appendChild(im); }
-    b.onclick=e=>{e.stopPropagation();pvShow(k)}; th.appendChild(b); });
-  document.getElementById("pv").classList.add("on");
-  pvShow(0);
+    if(pvIsVid(u)) b.textContent="▶"; else { const im=document.createElement("img"); im.src=pvLocal(u); im.alt=""; b.appendChild(im); }
+    b.onclick=ev=>{ev.stopPropagation();pvShow(k)}; th.appendChild(b); });
+  pvShow(Math.min(pvI,pvM.length-1));
 }
-function pvClose(){ const e=document.getElementById("pv"); if(e) e.classList.remove("on"); }
+function openPreview(id){ pvWire(); pvI=0; fillPreview(id); document.getElementById("pv").classList.add("on"); }
+function pvClose(){ const e=document.getElementById("pv"); if(e) e.classList.remove("on"); pvId=null; }
 let pvWired=false;
 function pvWire(){
   if(pvWired) return;
@@ -299,6 +487,7 @@ function pvWire(){
   pvWired=true;
 }
 addEventListener("keydown",e=>{
+  if(document.getElementById("modalHost").firstChild) return;   // a dialog is open, keys belong to it
   if(!document.getElementById("pv").classList.contains("on")) return;
   if(e.key==="Escape")pvClose();
   if(e.key==="ArrowLeft")pvShow(pvI-1);
@@ -313,16 +502,16 @@ Promise.all([
   loadOverrides()
 ]).then(([d,ov])=>{
   DATA=d.posts||[]; OVR=ov||{};
-  const dates=DATA.map(p=>eff(p).date).filter(Boolean).sort();
+  const dates=DATA.filter(p=>!eff(p).deleted).map(p=>eff(p).date).filter(Boolean).sort();
   // Abrir en el proximo post pendiente, no en el mas viejo de la cola. Con posts
   // caducados en el archivo, dates[0] dejaba el calendario anclado meses atras y
   // lo recien programado quedaba invisible sin pasar meses a mano.
-  const todayS=new Date().toISOString().slice(0,10);
-  const anchor=dates.find(x=>x>=todayS);
+  const anchor=dates.find(x=>x>=todayS());
   calMonth=anchor?new Date(anchor+"T00:00:00"):new Date(); calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth(),1);
   document.getElementById('updated').textContent=d.updated?'updated '+d.updated.replace('T',' ')+' UTC':'';
-  document.getElementById('foot').textContent="Calendar: enable editing, then drag a post to another day or double-click it to set the exact time. Metrics fill in once a post is live.";
+  document.getElementById('foot').textContent="Click a post to preview it and find Aprobar / Editar / Borrar there. Calendar: enable editing, then drag a post to another day or double-click it to set the exact time. Metrics fill in once a post is live.";
   wireSeg("viewF",v=>view=v); wireSeg("statusF",v=>fStatus=v); wireSeg("chanF",v=>fChan=v); setEditBtn();
+  document.getElementById("uploadBtn").onclick=uploadLoose;
   stats(); render();
 }).catch(()=>{document.getElementById('view').innerHTML='<p style="padding:20px;color:var(--mut)">Could not load data.json yet — it builds on the first Actions run.</p>';});
 </script>
@@ -331,6 +520,7 @@ Promise.all([
   <div id="pvbox">
     <div id="pvhead">
       <div><h3 id="pvtitle"></h3><div class="meta" id="pvmeta"></div></div>
+      <div id="pvacts"></div>
       <button id="pvclose">Cerrar</button>
     </div>
     <div id="pvbody">
@@ -342,11 +532,13 @@ Promise.all([
           <button class="nv" id="pvnext" aria-label="Siguiente">&rsaquo;</button>
         </div>
         <div id="pvthumbs"></div>
+        <div id="pvmedia"></div>
       </div>
       <div>
         <p id="pvcap"></p>
         <div id="pvtags"></div>
         <div id="pvlen"></div>
+        <div id="pvnote"></div>
       </div>
     </div>
   </div>
