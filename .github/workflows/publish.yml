@@ -46,6 +46,8 @@ jobs:
         if: ${{ always() && steps.publish.outcome != 'skipped' }}
         env:
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+          METRICOOL_TOKEN: ${{ secrets.METRICOOL_TOKEN }}
+          METRICOOL_USER_ID: ${{ secrets.METRICOOL_USER_ID }}
         run: python tools/build_data.py
       - name: Save state + dashboard data
         if: ${{ always() && steps.publish.outcome != 'skipped' }}

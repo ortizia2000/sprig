@@ -43,6 +43,12 @@
   .pill.live{background:var(--greenbg);color:var(--green);border-color:#bfe3d2} .pill.sched{background:#fff;color:var(--mut);border-color:var(--line)}
   .pill.rev{background:#fdf3e3;color:#9a6b12;border-color:#efdcb4}
   .pill.del{background:var(--redbg);color:var(--red);border-color:#f3c6c2}
+  .pill.mc{background:#f1efe6;color:#5e5a4f;border-color:#e0dbcd}
+  .pill.err{background:var(--redbg);color:var(--red);border-color:#f3c6c2}
+  .banner{border:1px solid;border-radius:11px;padding:10px 14px;margin-bottom:12px;font-size:13px;line-height:1.5}
+  .banner.red{background:var(--redbg);border-color:#f3c6c2;color:var(--red)}
+  .banner.amber{background:#fdf3e3;border-color:#efdcb4;color:#9a6b12}
+  .banner code{font-size:12px} .banner ul{margin:4px 0 0 18px;padding:0}
   .type{font-size:12px;color:#2f6fb0;background:#eef3fb;padding:2px 9px;border-radius:20px}
   .fbnote{font-size:11px;color:var(--mut);margin-top:3px}
   td.when.rev,td.when.del{color:var(--mut);font-style:italic}
@@ -57,6 +63,7 @@
   .day.today{border-color:var(--accent)} .day.today .dnum{color:var(--accent);font-weight:600}
   .chip{display:flex;align-items:center;gap:5px;border-left:3px solid var(--line);background:#fbfcfa;border-radius:5px;padding:3px 5px;margin-bottom:4px}
   .chip.live{border-left-color:var(--green)} .chip.sched{border-left-color:#cfd4cc}
+  .chip.mc{border-left-style:dotted;background:#f7f5ef} .chip.mc.dup{border-left-color:var(--red);border-left-style:solid}
   .chip.drag{cursor:grab} .chip.drag:active{cursor:grabbing}
   .chip img{width:18px;height:22px;object-fit:cover;border-radius:3px;background:#e9ebe6;flex:none}
   .chip span{font-size:11px;font-weight:600;text-transform:capitalize} .chip em{font-size:10px;color:var(--mut);font-style:normal;margin-left:auto}
@@ -119,6 +126,7 @@ tbody tr[data-pid]{cursor:pointer}
     <div class="seg" id="statusF"><button data-v="all" class="on">All</button><button data-v="review">In review</button><button data-v="scheduled">Scheduled</button><button data-v="published">Published</button><button data-v="deleted">Deleted</button></div>
     <div class="seg" id="chanF"><button data-v="all" class="on">All</button><button data-v="instagram">IG</button><button data-v="facebook">FB</button><button data-v="linkedin">LI</button></div>
   </div>
+  <div id="banners"></div>
   <div class="stats" id="stats"></div>
   <div id="view"></div>
   <footer id="foot"></footer>
@@ -139,16 +147,35 @@ const COLS=[{k:"thumb",t:""},{k:"post",t:"Post"},{k:"when",t:"When",sort:1},{k:"
 // Override keys the publisher honours (publisher/overrides.py). Everything the
 // buttons write goes through content/schedule.json; posts.yaml is never touched here.
 const OV_KEYS=["date","time","review","deleted","caption_en","caption_es","hashtags","media"];
-let DATA=[], OVR={}, sortK="when", sortDir=1, fStatus="all", fChan="all", view="table", calMonth=null, bust=0;
+let DATA=[], OVR={}, MC={status:"unconfigured",posts:[],duplicates:{}}, sortK="when", sortDir=1, fStatus="all", fChan="all", view="table", calMonth=null, bust=0;
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ig=(p,k)=>((p.metrics||{}).instagram||{})[k];
 const isPub=p=>(p.published||[]).length>0;
+// Metricool rows: the queue that actually publishes since 2026-09-06. Read-only
+// here (the GitHub write layer cannot touch them); edits go through tools/metricool.py.
+const isMc=p=>p.source==="metricool";
+// A video has no still on the Metricool side; a play glyph beats a broken image.
+const VID_THUMB="data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44"><rect width="36" height="44" rx="4" fill="#e9ebe6"/><path d="M14 13l12 9-12 9z" fill="#6b736c"/></svg>');
+const mcLocal=u=>{try{const x=new URL(u);return x.origin===location.origin?x.pathname.split("/").pop():null;}catch(e){return null;}};
+function mcRows(sec){
+  const dup=(sec&&sec.duplicates)||{};
+  return ((sec&&sec.posts)||[]).map(r=>{
+    const media=r.media||[], nets=r.networks||{};
+    const local=media.length&&mcLocal(media[0]), isVid=/\.(mp4|mov|m4v)(\?|$)/i.test(media[0]||"");
+    return {source:"metricool", id:"mc-"+r.id, mcId:r.id, uuid:r.uuid, date:r.date, time:r.time, tz:r.tz,
+      type:media.length>1?"carousel":(isVid?"reel":"image"),
+      platforms:Object.keys(nets), networks:nets, thumb:isVid?VID_THUMB:(local?("media/"+local):(media[0]||null)),
+      media, caption_en:r.text||"", caption_es:"", hashtags:"", review:false, deleted:false, draft:!!r.draft,
+      overridden:[], published:Object.keys(nets).filter(n=>nets[n]==="PUBLISHED"), metrics:{},
+      dup:!!dup[r.uuid], dupIds:dup[r.uuid]||[]};});
+}
 const base=u=>String(u).split("/").pop();
 // Effective post = data.json row (overrides applied at build time, hourly) with the
 // LIVE override file on top, so a button press shows immediately. `deleted` only
 // ever comes from the override file, so it is read from there alone (a restored post
 // would otherwise stay dimmed until the next Actions rebuild).
-function eff(p){const o=OVR[p.id]||{}; const e=Object.assign({},p);
+function eff(p){const o=isMc(p)?{}:(OVR[p.id]||{}); const e=Object.assign({},p);
+  if(isMc(p)){ e.mediaNames=(p.media||[]).map(u=>mcLocal(u)||u); return e; }
   for(const k of OV_KEYS){ if(k in o) e[k]=o[k]; }
   e.deleted=!!o.deleted;
   e.mediaNames=(o.media||p.media||[]).map(base);
@@ -178,14 +205,15 @@ function renderTable(){
     return `<th class="${c.sort?'sortable':''} ${c.num?'num':''}" data-k="${c.k}">${c.t} ${ar}</th>`;}).join("");
   const rows=sorted(filtered()).map(p=>{const e=eff(p);
     const chans=(p.platforms||[]).map(pl=>{const l=(p.published||[]).includes(pl);
-      return `<span class="pill ${l?'live':(e.deleted?'del':(e.review?'rev':'sched'))}">${PLAT[pl]||pl}${l?' ●':''}</span>`;}).join("");
+      const st=isMc(p)?(p.networks||{})[pl]:null; const err=st&&st!=="PUBLISHED"&&st!=="PENDING";
+      return `<span class="pill ${l?'live':(err?'err':(e.deleted?'del':(e.review?'rev':'sched')))}" title="${esc(st||'')}">${PLAT[pl]||pl}${l?' ●':(err?' ✕':'')}</span>`;}).join("");
     const fb=((p.metrics||{}).facebook)||{};
     const fbn=(fb.reactions!=null||fb.comments!=null)?`<div class="fbnote">FB ♥ ${fb.reactions??0} · 💬 ${fb.comments??0}</div>`:"";
     const num=k=>{const v=ig(p,k);return v==null?`<td class="num dim">—</td>`:`<td class="num">${v.toLocaleString()}</td>`;};
-    const whenCls=e.deleted?'del':(e.review?'rev':(editing()&&!isPub(p)?'edit':''));
+    const whenCls=e.deleted?'del':(e.review?'rev':(editing()&&!isPub(p)&&!isMc(p)?'edit':''));
     const whenTxt=e.deleted?'Borrado':(e.review?'Pendiente de aprobación':fmtWhen(p));
     return `<tr data-pid="${esc(p.id)}" class="${e.deleted?'deleted':''}"><td><img class="thumb" src="${esc(thumbSrc(p))}" alt=""></td>
-      <td class="post"><div class="id">${esc(p.id)}</div><div class="cap">${esc(e.caption_en||'')}</div></td>
+      <td class="post"><div class="id">${isMc(p)?`<span class="pill mc">Metricool</span>${p.dup?'<span class="pill err">copia ×'+p.dupIds.length+'</span>':''}<span style="color:var(--mut);font-weight:400">#${esc(String(p.mcId))}</span>`:esc(p.id)}</div><div class="cap">${esc(e.caption_en||'')}</div></td>
       <td class="when ${whenCls}" data-id="${esc(p.id)}">${whenTxt}</td>
       <td>${chans}${fbn}</td><td><span class="type">${esc(p.type)}</span></td>
       ${num("reach")}${num("likes")}${num("comments")}${num("saved")}</tr>`;}).join("")
@@ -204,8 +232,9 @@ function renderCalendar(){
   const y=calMonth.getFullYear(),m=calMonth.getMonth();
   const startDow=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
   const tS=todayS();
-  const chip=p=>`<div class="chip ${isPub(p)?'live':'sched'} ${editing()&&!isPub(p)?'drag':''}" draggable="${editing()&&!isPub(p)}" data-id="${esc(p.id)}">
-      <img src="${esc(thumbSrc(p))}"><span>${esc(p.id)}</span><em>${(p.platforms||[]).map(x=>PLAT[x]).join(' ')}</em></div>`;
+  const chip=p=>{const drag=editing()&&!isPub(p)&&!isMc(p);
+    return `<div class="chip ${isPub(p)?'live':'sched'} ${isMc(p)?'mc':''} ${p.dup?'dup':''} ${drag?'drag':''}" draggable="${drag}" data-id="${esc(p.id)}" title="${isMc(p)?'Metricool #'+esc(String(p.mcId))+(p.dup?' · copia duplicada':''):''}">
+      <img src="${esc(thumbSrc(p))}"><span>${isMc(p)?'M· '+esc(Array.from((p.caption_en||'').split('\n')[0]).slice(0,18).join('')):esc(p.id)}</span><em>${(p.platforms||[]).map(x=>PLAT[x]||x).join(' ')}</em></div>`;};
   let cells=""; for(let i=0;i<startDow;i++)cells+=`<div class="day empty"></div>`;
   for(let d=1;d<=days;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     cells+=`<div class="day ${ds===tS?'today':''}" data-date="${ds}"><div class="dnum">${d}</div>${(byDate[ds]||[]).map(chip).join("")}</div>`;}
@@ -421,14 +450,24 @@ function stats(){const E=DATA.map(eff);const del=E.filter(e=>e.deleted).length;c
   const pub=live.filter(isPub).length,reach=DATA.reduce((s,p)=>s+(ig(p,"reach")||0),0);
   const rev=live.filter(p=>eff(p).review).length;
   const c=[["Posts",live.length],["Published",pub],["Scheduled",live.length-pub-rev],["In review",rev]];
+  const mc=DATA.filter(isMc).length; if(mc||MC.status!=="unconfigured") c.push(["Metricool",mc]);
   if(del)c.push(["Deleted",del]); if(reach>0)c.push(["Total reach",reach.toLocaleString()]);
   document.getElementById("stats").innerHTML=c.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");}
+/* ---------- Metricool banners: a failed read is never an empty queue ---------- */
+function banners(){
+  const h=document.getElementById("banners"); const out=[];
+  if(MC.status==="error") out.push(`<div class="banner red"><b>Metricool no se pudo leer</b> · la cola que ves está incompleta. ${esc(MC.error||"")}</div>`);
+  else if(MC.status==="unconfigured") out.push(`<div class="banner amber"><b>Metricool no conectado.</b> Este tablero solo muestra la cola de Sprig. Para ver lo que Metricool va a publicar, añade los secretos <code>METRICOOL_TOKEN</code> y <code>METRICOOL_USER_ID</code> al repo (README → Metricool).</div>`);
+  const dups=Object.entries(MC.duplicates||{});
+  if(dups.length) out.push(`<div class="banner red"><b>⚠ Copias en Metricool: cada una publica por separado.</b> Bórralas en Metricool o corre <code>python tools/metricool.py dedupe --apply</code>.<ul>${dups.map(([u,ids])=>`<li>uuid <code>${esc(u)}</code> · ${ids.length} filas pendientes: ${ids.map(i=>"#"+i).join(", ")}</li>`).join("")}</ul></div>`);
+  h.innerHTML=out.join("");
+}
 /* ---------- preview ---------- */
 let pvI=0, pvM=[], pvId=null;
 const pvIsVid=u=>/\.(mp4|mov|webm|m4v)$/i.test(String(u));
 // Las miniaturas y el visor leen de docs/media (mismo origen). raw.githubusercontent
 // cross-origin ya habia fallado antes en este dashboard.
-const pvLocal=u=>"media/"+base(u)+(bust?"?v="+bust:"");
+const pvLocal=u=>/^https?:/i.test(String(u))?u:("media/"+base(u)+(bust?"?v="+bust:""));
 function pvShow(n){
   pvI=Math.max(0,Math.min(pvM.length-1,n));
   const u=pvM[pvI];
@@ -445,16 +484,19 @@ function fillPreview(id){
   pvId=id; pvM=e.mediaNames;
   document.getElementById("pvtitle").textContent=p.id;
   const st=e.deleted?"Borrado de la cola":(e.review?"En revisión, sin fecha":fmtWhen(p));
-  document.getElementById("pvmeta").textContent=st+"  ·  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  ·  "+p.type;
+  document.getElementById("pvmeta").textContent=(isMc(p)?"Metricool · ":"")+st+"  ·  "+(p.platforms||[]).map(x=>PLAT[x]||x).join(" ")+"  ·  "+p.type;
   const cap=[e.caption_en,e.caption_es].filter(x=>x&&x.trim()).join("\n\n");
   document.getElementById("pvcap").textContent=cap;
   document.getElementById("pvtags").textContent=e.hashtags||"";
   document.getElementById("pvlen").textContent=(cap.length+(e.hashtags?e.hashtags.length+2:0))+" caracteres  ·  limite Instagram 2.200";
-  const ovk=Object.keys(OVR[id]||{}); document.getElementById("pvnote").textContent=ovk.length?"Editado desde el dashboard: "+ovk.join(", "):"";
+  const ovk=Object.keys(OVR[id]||{});
+  document.getElementById("pvnote").textContent=isMc(p)
+    ?`Programado en Metricool · #${p.mcId} · uuid ${p.uuid}${p.draft?' · borrador':''} · `+Object.entries(p.networks||{}).map(([n,s])=>`${PLAT[n]||n}: ${s}`).join(", ")+(p.dup?`  ⚠ ${p.dupIds.length} copias pendientes de este mismo post`:"")+"  ·  Se edita con tools/metricool.py, no desde aquí."
+    :(ovk.length?"Editado desde el dashboard: "+ovk.join(", "):"");
   // actions
   const acts=document.getElementById("pvacts"); acts.innerHTML="";
   const btn=(t,cls,fn,title)=>{const b=document.createElement("button");b.className="f "+cls;b.textContent=t;b.onclick=fn;if(title)b.title=title;acts.appendChild(b);return b;};
-  if(isPub(p)){ /* published: nothing to change */ }
+  if(isPub(p)||isMc(p)){ /* published, or lives in Metricool: nothing to change here */ }
   else if(e.deleted){ btn("↩ Restaurar","on",()=>restore(id)); }
   else{
     if(e.review) btn("✓ Aprobar","on",()=>openApprove(id),"Pregunta fecha y hora, luego agenda");
@@ -462,7 +504,7 @@ function fillPreview(id){
     btn("🗑 Borrar","danger",()=>openDelete(id));
   }
   const md=document.getElementById("pvmedia"); md.innerHTML="";
-  if(!isPub(p)&&!e.deleted){
+  if(!isPub(p)&&!e.deleted&&!isMc(p)){
     const b1=document.createElement("button");b1.className="f";b1.textContent="⇄ Reemplazar esta";b1.onclick=()=>replaceMedia(id,pvI);md.appendChild(b1);
     if(p.type!=="reel"){const b2=document.createElement("button");b2.className="f";b2.textContent="+ Añadir imagen";b2.onclick=()=>replaceMedia(id,null);md.appendChild(b2);
       const b3=document.createElement("button");b3.className="f danger";b3.textContent="− Quitar esta";b3.onclick=()=>removeMedia(id,pvI);md.appendChild(b3);}
@@ -501,7 +543,7 @@ Promise.all([
   fetch('./data.json?'+Date.now()).then(r=>r.json()),
   loadOverrides()
 ]).then(([d,ov])=>{
-  DATA=d.posts||[]; OVR=ov||{};
+  MC=d.metricool||MC; DATA=(d.posts||[]).concat(mcRows(MC)); OVR=ov||{};
   const dates=DATA.filter(p=>!eff(p).deleted).map(p=>eff(p).date).filter(Boolean).sort();
   // Abrir en el proximo post pendiente, no en el mas viejo de la cola. Con posts
   // caducados en el archivo, dates[0] dejaba el calendario anclado meses atras y
@@ -509,10 +551,10 @@ Promise.all([
   const anchor=dates.find(x=>x>=todayS());
   calMonth=anchor?new Date(anchor+"T00:00:00"):new Date(); calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth(),1);
   document.getElementById('updated').textContent=d.updated?'updated '+d.updated.replace('T',' ')+' UTC':'';
-  document.getElementById('foot').textContent="Click a post to preview it and find Aprobar / Editar / Borrar there. Calendar: enable editing, then drag a post to another day or double-click it to set the exact time. Metrics fill in once a post is live.";
+  document.getElementById('foot').textContent="Click a post to preview it and find Aprobar / Editar / Borrar there. Calendar: enable editing, then drag a post to another day or double-click it to set the exact time. Metrics fill in once a post is live. Rows marked Metricool are what Metricool will publish (refreshed hourly); they are edited with tools/metricool.py.";
   wireSeg("viewF",v=>view=v); wireSeg("statusF",v=>fStatus=v); wireSeg("chanF",v=>fChan=v); setEditBtn();
   document.getElementById("uploadBtn").onclick=uploadLoose;
-  stats(); render();
+  banners(); stats(); render();
 }).catch(()=>{document.getElementById('view').innerHTML='<p style="padding:20px;color:var(--mut)">Could not load data.json yet — it builds on the first Actions run.</p>';});
 </script>
 

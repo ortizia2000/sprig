@@ -47,6 +47,32 @@ Linux has no Georgia / Helvetica Neue / Courier New; the workflow maps them to G
 Liberation Sans / Liberation Mono (metric-compatible), so line breaks hold. Check the first
 Linux render of a set before trusting it blindly.
 
+## Metricool: the queue that actually publishes (since 2026-09-06)
+
+Publishing to Instagram + Facebook goes through **Metricool**; Sprig hosts the media
+(`docs/media/` on GitHub Pages) and shows the queue. The dashboard lists every Metricool
+row for the last 14 days and the next 120 (refreshed hourly by `publish.yml`), marked
+**Metricool**, with each network's status. A red banner appears when one post has more
+than one pending copy, because **every copy publishes on its own**.
+
+Why that banner exists: Metricool's `PUT` only edits in place when the body carries the
+post's *current* `id` and its `uuid`. Without them it creates a second row and leaves the
+old one scheduled. On 2026-09-06 a carousel was "updated" three times that way and went out
+four times. `tools/metricool.py` does the safe dance for you:
+
+```bash
+python tools/metricool.py list                                   # what Metricool will publish
+python tools/metricool.py update <uuid> --date 2026-09-20 --time 15:00
+python tools/metricool.py update <uuid> --text-file caption.txt  # edits in place, deletes any copy the write left
+python tools/metricool.py dedupe            # dry run: pending copies of one uuid
+python tools/metricool.py dedupe --apply    # keep the newest, delete the rest (published rows are never touched)
+```
+
+Secrets: `METRICOOL_TOKEN` (Metricool → Settings → API) and `METRICOOL_USER_ID` (the `userId=`
+in the browser URL) as repository secrets; locally the same values in `~/.metricool-token` and
+`~/.metricool-id`. The dashboard tells the difference between *not configured*, *read failed*
+and *empty*, so an outage never looks like an empty queue.
+
 ## How it works
 
 ```

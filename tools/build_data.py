@@ -10,7 +10,9 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "tools"))
 from publisher import overrides  # noqa: E402
+import metricool  # noqa: E402
 
 MEDIA_BASE = os.environ.get("MEDIA_BASE_URL") or \
     "https://raw.githubusercontent.com/ortizia2000/sprig/main/content/media"
@@ -22,6 +24,33 @@ def _read_json(path, default):
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return default
+
+
+def metricool_section():
+    """The queue that actually publishes (Metricool) as the dashboard shows it.
+    Three states, never conflated: `unconfigured` (no token here), `error` (token
+    present, read failed — the message says why), `ok`. An empty `posts` list is
+    only trustworthy when status is ok."""
+    start, end = metricool.default_window()
+    sec = {"status": "unconfigured", "error": None, "window": [start, end],
+           "fetched": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"),
+           "posts": [], "duplicates": {}}
+    if not metricool.configured():
+        print("metricool: not configured (METRICOOL_TOKEN / METRICOOL_USER_ID) — queue not shown")
+        return sec
+    try:
+        rows = metricool.Client().list(start, end)
+    except metricool.MetricoolError as e:
+        sec.update(status="error", error=str(e))
+        print(f"metricool: READ FAILED — {e}", file=sys.stderr)
+        return sec
+    rows.sort(key=lambda r: ((r.get("publicationDate") or {}).get("dateTime", ""), r.get("id") or 0))
+    sec.update(status="ok", posts=[metricool.summarize(r) for r in rows], duplicates=metricool.duplicates(rows))
+    for uuid, ids in sec["duplicates"].items():
+        print(f"metricool: DUPLICATE uuid {uuid} has {len(ids)} pending copies {ids} — each one publishes",
+              file=sys.stderr)
+    print(f"metricool: {len(rows)} scheduled row(s) between {start} and {end}")
+    return sec
 
 
 def run():
@@ -56,7 +85,8 @@ def run():
             "metrics": metrics.get(pid, {}),
         })
 
-    data = {"updated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"), "posts": rows}
+    data = {"updated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"), "posts": rows,
+            "metricool": metricool_section()}
     out = os.path.join(ROOT, "docs", "data.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
