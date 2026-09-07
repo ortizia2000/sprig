@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T20:22+00:00",
+  "updated": "2026-09-07T20:23+00:00",
   "posts": [
     {
       "id": "post1",
@@ -155,133 +155,14 @@
     }
   ],
   "metricool": {
-    "status": "ok",
+    "status": "unconfigured",
     "error": null,
     "window": [
       "2026-08-24",
       "2027-01-05"
     ],
-    "fetched": "2026-09-07T20:22+00:00",
-    "posts": [
-      {
-        "id": 366692190,
-        "uuid": "1083540592621604582",
-        "date": "2026-08-26",
-        "time": "09:30",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "My Chief of Staff has a very particular set of skills. She is also a mushroom.\n\nCelia runs the week. Meeting notes, task capture, team broadcasts, planning. You said yes to eleven things and her whole job is making sure all eleven actually happen.\n\nYou wake up and your inbox is already read. She tells you which three actually need you, why, and hands you the drafts. You say send. Clean inbox in seconds.\n\nShe works 24/7. You do not.\n\nOne brain underneath. A whole crew growing out of it. Celia is one of them.\n\nWhat would you \"hire\" Celia for? 🍄\n\n#SegundoCerebro #SecondBrain #IA #AI #MemoriaIA #AImemory #ChiefOfStaff #Productividad #BuildInPublic #Mycelium\n\nMi Chief of Staff tiene un conjunto de habilidades muy particular. También es un hongo.\n\nCelia maneja la semana. Notas de reuniones, captura de tareas, comunicados al equipo, planeación. Dijiste que sí a once cosas y su trabajo es que las once pasen.\n\nTe despiertas y tu bandeja ya está leída. Te dice cuáles tres necesitan tu respuesta, por qué, y te pasa los borradores. Tú dices envía. Bandeja limpia en segundos.\n\nElla trabaja 24/7. Tú no.\n\nUn cerebro abajo. Un equipo entero creciendo de ahí. Celia es una de ellos.\n\n¿Para qué \"contratarías\" a Celia? 🍄\n\n#SegundoCerebro #SecondBrain #IA #AI #MemoriaIA #AImemory #ChiefOfStaff #Productividad #BuildInPublic #Mycelium",
-        "media": [
-          "https://static.metricool.com/video-converter/4957788/202608/139ba0262fb24ae4.mp4"
-        ],
-        "draft": false,
-        "autoPublish": true
-      },
-      {
-        "id": 367146879,
-        "uuid": "-6065320620000195513",
-        "date": "2026-08-28",
-        "time": "09:30",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "Our business development manager makes sure we never leave money on the table. He is also a truffle.\n\nTruffle researches your prospects, preps your discovery calls, writes your proposals, reads the contracts, and chases the follow-ups you forgot.\n\nThat warm intro from March? Drafted and waiting in your inbox. Nothing goes cold on his watch.\n\nOne brain underneath. A whole crew growing out of it. Truffle is one of them.\n\nWhat deal did you let go cold? 🍄\n\n—\n\nNuestro gerente de desarrollo de negocio se asegura de que nunca dejemos dinero sobre la mesa. También es una trufa.\n\nTruffle investiga a tus prospectos, prepara tus llamadas de descubrimiento, escribe tus propuestas, lee los contratos, y persigue los seguimientos que se te olvidaron.\n\n¿Esa presentación cálida de marzo? Redactada y esperando en tu bandeja. Con él nada se enfría.\n\nUn cerebro abajo. Un equipo entero creciendo de ahí. Truffle es uno de ellos.\n\n¿Qué negocio dejaste enfriar? 🍄\n\n#SegundoCerebro #SecondBrain #IA #AI #MemoriaIA #AImemory #BusinessDevelopment #DesarrolloDeNegocio #Pipeline #BuildInPublic #Mycelium",
-        "media": [
-          "https://static.metricool.com/video/4957788/202608/423487b45a36458b.mp4"
-        ],
-        "draft": false,
-        "autoPublish": true
-      },
-      {
-        "id": 371635538,
-        "uuid": "-726127029803859472",
-        "date": "2026-09-06",
-        "time": "11:30",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "Donamos un cupo de nuestra clase de IA al 4.° Banquete de la MTA en Cali.\n\nEl 18 de septiembre es el banquete. El 80% de todo lo que se recoja va para los damnificados del terremoto. El 20% queda para la nueva ermita de Schoenstatt.\n\nNosotras pusimos un cupo de Instala tu Segundo Cerebro en la rifa de esa noche. Vale US$2,000. No solo aprendes IA, sales con el sistema andando: una memoria continua para Claude, Codex y las demás, que guarda tu contexto y te quita el trabajo repetido.\n\nQuien se lo gane lo puede reclamar desde cualquier país, porque la clase es 100% en línea.\n\nSi quieres apoyar, el bono del banquete son $80.000\n\nDesde Colombia: Bancolombia, llave 900284422, ahorros 82953541170\nDesde el exterior: app de Western Union, transferencia por Llave, 900284422\n\nComprobante al WhatsApp 300 615 3971\n\nViernes 18 de septiembre, 7:00 p.m.\nParroquia de la Virgen Peregrina, Cali\nMisa por las víctimas a las 6:00 p.m.\n\nLa rifa se maneja aparte del bono. Escríbele a @schoenstatt_cali para saber cómo participar.\n\n#Cali #Colombia #Schoenstatt #IA #SegundoCerebro",
-        "media": [
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-1.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-2.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-3.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-4.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-5.jpg"
-        ],
-        "draft": false,
-        "autoPublish": true
-      },
-      {
-        "id": 371784208,
-        "uuid": "-6897485846696738380",
-        "date": "2026-09-06",
-        "time": "13:23",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "Ayuda a Colombia 🇨🇴\n\nDona y participa por un cupo de US$2,000 en nuestra clase de IA.\n\nEl 18 de septiembre es el 4.° Banquete de la MTA en Cali. El 80% de todo lo que se recoja va para las familias del terremoto. El 20% queda para la nueva ermita de Schoenstatt.\n\nNosotras pusimos un cupo de Instala tu Segundo Cerebro en la rifa de esa noche. No solo aprendes IA, sales con el sistema andando: una memoria continua para Claude, Codex y las demás, que guarda tu contexto y te quita el trabajo repetido.\n\nQuien se lo gane lo puede reclamar desde cualquier país, porque la clase es 100% en línea.\n\nEl bono son 80.000 COP (~US $25)\n\nDesde Colombia: Bancolombia, llave 900284422, ahorros 82953541170\nDesde el exterior: app de Western Union, transferencia por Llave, 900284422\n\nComprobante al WhatsApp 300 615 3971\n\nViernes 18 de septiembre, 7:00 p.m.\nParroquia de la Virgen Peregrina, Cali\nMisa por las víctimas a las 6:00 p.m.\n\nMás info con @schoenstatt_cali\n\n#Cali #Colombia #Schoenstatt #IA #SegundoCerebro",
-        "media": [
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-1.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-2.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-3.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-4.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-5.jpg"
-        ],
-        "draft": false,
-        "autoPublish": true
-      },
-      {
-        "id": 371632027,
-        "uuid": "-726127029803859472",
-        "date": "2026-09-07",
-        "time": "11:30",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "Dona a los damnificados del terremoto en Colombia y te puedes ganar nuestra clase de IA.\n\nEl 18 de septiembre es el 4.° Banquete de la MTA en Cali. El 80% de todo lo que se recoja va para los damnificados. El 20% queda para la nueva ermita de Schoenstatt.\n\nNosotras pusimos un cupo de Instala tu Segundo Cerebro en la rifa de esa noche. Vale US$2,000. No solo aprendes IA, sales con el sistema andando: una memoria continua para Claude, Codex y las demás, que guarda tu contexto y te quita el trabajo repetido.\n\nEl premio se reclama desde cualquier país porque la clase es 100% en línea. Si donas desde otra ciudad y no alcanzas a ir al banquete, igual puedes ganártelo.\n\nBono de $80.000\n\nDesde Colombia: Bancolombia, llave 900284422, ahorros 82953541170\nDesde el exterior: app de Western Union, transferencia por Llave, 900284422\n\nComprobante al WhatsApp 300 615 3971\n\nViernes 18 de septiembre, 7:00 p.m.\nParroquia de la Virgen Peregrina, Cali\nMisa por las víctimas a las 6:00 p.m.\n\nToda la info con @schoenstatt_cali\n\n#Cali #Colombia #Schoenstatt #IA #SegundoCerebro",
-        "media": [
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-1.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-2.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-3.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-4.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-5.jpg"
-        ],
-        "draft": false,
-        "autoPublish": true
-      },
-      {
-        "id": 371632507,
-        "uuid": "-726127029803859472",
-        "date": "2026-09-07",
-        "time": "15:00",
-        "tz": "America/New_York",
-        "networks": {
-          "facebook": "PUBLISHED",
-          "instagram": "PUBLISHED"
-        },
-        "text": "Donamos un cupo de nuestra clase de IA al 4.° Banquete de la MTA en Cali.\n\nEl 18 de septiembre es el banquete. El 80% de todo lo que se recoja va para los damnificados del terremoto. El 20% queda para la nueva ermita de Schoenstatt.\n\nNosotras pusimos un cupo de Instala tu Segundo Cerebro en la rifa de esa noche. Vale US$2,000. No solo aprendes IA, sales con el sistema andando: una memoria continua para Claude, Codex y las demás, que guarda tu contexto y te quita el trabajo repetido.\n\nQuien se lo gane lo puede reclamar desde cualquier país, porque la clase es 100% en línea.\n\nSi quieres apoyar, el bono del banquete son $80.000\n\nDesde Colombia: Bancolombia, llave 900284422, ahorros 82953541170\nDesde el exterior: app de Western Union, transferencia por Llave, 900284422\n\nComprobante al WhatsApp 300 615 3971\n\nViernes 18 de septiembre, 7:00 p.m.\nParroquia de la Virgen Peregrina, Cali\nMisa por las víctimas a las 6:00 p.m.\n\nLa rifa se maneja aparte del bono. Escríbele a @schoenstatt_cali para saber cómo participar.\n\n#Cali #Colombia #Schoenstatt #IA #SegundoCerebro",
-        "media": [
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-1.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-2.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-3.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-4.jpg",
-          "https://ortizia2000.github.io/sprig/media/banquete-mta-5.jpg"
-        ],
-        "draft": false,
-        "autoPublish": true
-      }
-    ],
+    "fetched": "2026-09-07T20:23+00:00",
+    "posts": [],
     "duplicates": {}
   }
 }
