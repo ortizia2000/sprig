@@ -8,6 +8,12 @@ No monthly fee, no third-party scheduler. (Working name — rename freely.)
 
 ## Dashboard buttons (approve · edit · delete · upload) and slide rendering
 
+> **Approve, edit and delete are moving to Mycelium → Spore → Approvals.** The queue
+> becomes hosted there, so a post fires on time with this laptop closed. The write
+> buttons below are retired once `tools/export_to_runtime.py --apply` has copied the
+> queue into that rail — see [Exporting the queue to Mycelium](#exporting-the-queue-to-mycelium).
+> Preview, drag-and-drop dates and slide rendering stay here.
+
 The dashboard at `docs/` (GitHub Pages) can now change the queue without touching
 `posts.yaml`. Click a post to open its preview; the buttons live there.
 
@@ -23,6 +29,38 @@ Everything lands in `content/schedule.json` (see `publisher/overrides.py` for th
 publisher honours). `posts.yaml` remains the source; the override file is the layer you touch
 from the browser. Writes need the same fine-grained GitHub token as drag-and-drop
 (*Enable editing*); it is stored only in your browser.
+
+### Exporting the queue to Mycelium
+
+`tools/export_to_runtime.py` copies this queue into Mycelium's hosted publish rail:
+one row per post per platform (Instagram and Facebook only), with the same composed
+caption, the same media files and the same slot. A post held here with `review: true`
+arrives held, waiting for approval in **Mycelium → Spore → Approvals**; a post already
+approved here is approved there too, so it keeps its time.
+
+```bash
+export MYCELIUM_RUNTIME_URL=https://mycelium-runtime.fly.dev
+export MYCELIUM_RUNTIME_TOKEN=...          # the tenant token, never committed
+
+python tools/export_to_runtime.py          # dry run (the default): prints the table, sends nothing
+python tools/export_to_runtime.py --apply  # uploads the media and creates the rows
+```
+
+| Variable | What it is |
+|---|---|
+| `MYCELIUM_RUNTIME_URL` | Base URL of the runtime. Missing → exit 2, before any network call. |
+| `MYCELIUM_RUNTIME_TOKEN` | Bearer token for the tenant. Same rule. |
+
+The dry run lists post id, platform, held/queued, the slot as RFC3339 with its offset,
+media count and bytes. `--apply` is safe to re-run: every row carries
+`source: "sprig:<post id>:<platform>"`, the whole queue is read once before writing, and
+anything already there is skipped — a second `--apply` creates nothing. Posts marked
+`deleted` in `content/schedule.json`, and anything already in `content/state/published.json`,
+are never exported. A non-2xx answer prints the runtime's reason and stops (exit 1); rows
+created before that point stay, and the next run skips them.
+
+`.github/workflows/publish.yml` keeps running until the export is verified live; turning
+it off is a separate step, after the first real post goes out through the rail.
 
 ### Slides rendered by GitHub Actions
 
