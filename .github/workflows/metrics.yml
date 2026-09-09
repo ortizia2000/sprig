@@ -26,6 +26,8 @@ jobs:
       - name: Rebuild dashboard data
         env:
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
+          METRICOOL_TOKEN: ${{ secrets.METRICOOL_TOKEN }}
+          METRICOOL_USER_ID: ${{ secrets.METRICOOL_USER_ID }}
         run: python tools/build_data.py
       - name: Commit
         run: |

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T04:09+00:00",
+  "updated": "2026-09-09T09:32+00:00",
   "posts": [
     {
       "id": "post1",
@@ -153,5 +153,16 @@
       "published": [],
       "metrics": {}
     }
-  ]
+  ],
+  "metricool": {
+    "status": "unconfigured",
+    "error": null,
+    "window": [
+      "2026-08-26",
+      "2027-01-07"
+    ],
+    "fetched": "2026-09-09T09:32+00:00",
+    "posts": [],
+    "duplicates": {}
+  }
 }
