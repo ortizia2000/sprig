@@ -457,7 +457,11 @@ function stats(){const E=DATA.map(eff);const del=E.filter(e=>e.deleted).length;c
 function banners(){
   const h=document.getElementById("banners"); const out=[];
   if(MC.status==="error") out.push(`<div class="banner red"><b>Metricool no se pudo leer</b> · la cola que ves está incompleta. ${esc(MC.error||"")}</div>`);
-  else if(MC.status==="unconfigured") out.push(`<div class="banner amber"><b>Metricool no conectado.</b> Este tablero solo muestra la cola de Sprig. Para ver lo que Metricool va a publicar, añade los secretos <code>METRICOOL_TOKEN</code> y <code>METRICOOL_USER_ID</code> al repo (README → Metricool).</div>`);
+  else if(MC.status==="unconfigured"){
+    const miss=MC.missing||["METRICOOL_TOKEN","METRICOOL_USER_ID"];
+    const half=miss.length===1?` El otro secreto YA está puesto: falta <b>solo este</b>, y hasta que esté este tablero no muestra nada de Metricool.`:"";
+    out.push(`<div class="banner amber"><b>Metricool no conectado.</b> Este tablero solo muestra la cola de Sprig. Falta${miss.length>1?"n":""} ${miss.map(m=>"<code>"+esc(m)+"</code>").join(" y ")} en los secretos del repo (README → Metricool).${half}</div>`);
+  }
   const dups=Object.entries(MC.duplicates||{});
   if(dups.length) out.push(`<div class="banner red"><b>⚠ Copias en Metricool: cada una publica por separado.</b> Bórralas en Metricool o corre <code>python tools/metricool.py dedupe --apply</code>.<ul>${dups.map(([u,ids])=>`<li>uuid <code>${esc(u)}</code> · ${ids.length} filas pendientes: ${ids.map(i=>"#"+i).join(", ")}</li>`).join("")}</ul></div>`);
   h.innerHTML=out.join("");
