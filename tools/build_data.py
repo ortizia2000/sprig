@@ -28,15 +28,18 @@ def _read_json(path, default):
 
 def metricool_section():
     """The queue that actually publishes (Metricool) as the dashboard shows it.
-    Three states, never conflated: `unconfigured` (no token here), `error` (token
+    Three states, never conflated: `unconfigured` (credentials absent — `missing`
+    names WHICH, because one of two set reads like none), `error` (credentials
     present, read failed — the message says why), `ok`. An empty `posts` list is
     only trustworthy when status is ok."""
     start, end = metricool.default_window()
-    sec = {"status": "unconfigured", "error": None, "window": [start, end],
+    missing = metricool.missing_credentials()
+    sec = {"status": "unconfigured", "error": None, "missing": missing, "window": [start, end],
            "fetched": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="minutes"),
            "posts": [], "duplicates": {}}
-    if not metricool.configured():
-        print("metricool: not configured (METRICOOL_TOKEN / METRICOOL_USER_ID) — queue not shown")
+    if missing:
+        half = " (the other one IS set — this is half-configured, not unconfigured)" if len(missing) < 2 else ""
+        print(f"metricool: not configured — missing {', '.join(missing)}{half}; queue not shown")
         return sec
     try:
         rows = metricool.Client().list(start, end)

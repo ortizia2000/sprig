@@ -159,6 +159,32 @@ def test_transport_error_is_loud():
         metricool.Client(token="t", user_id="1", http=Down()).list("2026-12-01", "2026-12-31")
 
 
+def test_missing_credentials_names_the_absent_one(monkeypatch):
+    # Half-configured is the dangerous state: on the repo only METRICOOL_TOKEN was
+    # ever set, and "no token" and "no user id" rendered identically for 8 days.
+    monkeypatch.setenv("METRICOOL_TOKEN", "t")
+    monkeypatch.delenv("METRICOOL_USER_ID", raising=False)
+    monkeypatch.setattr(metricool, "_read_file", lambda p: "")
+    assert metricool.missing_credentials() == ["METRICOOL_USER_ID"]
+    assert not metricool.configured()
+
+    monkeypatch.setenv("METRICOOL_USER_ID", "1")
+    assert metricool.missing_credentials() == []
+    assert metricool.configured()
+
+    monkeypatch.delenv("METRICOOL_TOKEN")
+    assert metricool.missing_credentials() == ["METRICOOL_TOKEN"]
+
+
+def test_build_data_says_which_credential_is_missing(monkeypatch, capsys):
+    import build_data
+    monkeypatch.setattr(metricool, "missing_credentials", lambda: ["METRICOOL_USER_ID"])
+    sec = build_data.metricool_section()
+    assert sec["status"] == "unconfigured" and sec["missing"] == ["METRICOOL_USER_ID"]
+    out = capsys.readouterr().out
+    assert "METRICOOL_USER_ID" in out and "half-configured" in out
+
+
 def test_client_refuses_to_start_without_credentials(monkeypatch):
     monkeypatch.delenv("METRICOOL_TOKEN", raising=False)
     monkeypatch.delenv("METRICOOL_USER_ID", raising=False)
@@ -186,7 +212,7 @@ def test_cli_update_builds_a_publication_date_patch(monkeypatch, tmp_path, capsy
 
 def test_build_data_reports_unconfigured_not_empty(monkeypatch):
     import build_data
-    monkeypatch.setattr(metricool, "configured", lambda: False)
+    monkeypatch.setattr(metricool, "missing_credentials", lambda: list(metricool.CREDENTIAL_NAMES))
     sec = build_data.metricool_section()
     assert sec["status"] == "unconfigured" and sec["posts"] == []
 

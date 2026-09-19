@@ -64,9 +64,19 @@ def credentials():
     return token, user_id
 
 
+CREDENTIAL_NAMES = ("METRICOOL_TOKEN", "METRICOOL_USER_ID")
+
+
+def missing_credentials():
+    """Which of the two credentials is absent, by name. Half-configured is the
+    dangerous state: on 2026-09-11 only METRICOOL_TOKEN was set on the repo and the
+    dashboard read exactly like nothing was set, so it stayed dark for 8 days. A
+    guard that cannot say WHAT is missing sends you looking in the wrong place."""
+    return [name for name, value in zip(CREDENTIAL_NAMES, credentials()) if not value]
+
+
 def configured():
-    token, user_id = credentials()
-    return bool(token and user_id)
+    return not missing_credentials()
 
 
 def write_body(row):
